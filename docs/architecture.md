@@ -1,0 +1,124 @@
+# Architecture
+
+Eleven tables go into a Fabric lakehouse, either uploaded by hand from the committed snapshot or written by
+the refresh notebook with current dates (see the README). A semantic model and an ontology give them meaning, and two
+data agents answer the same questions so you can see what the ontology adds. A live RFID feed and an
+operations agent come next. Publishing beyond Fabric comes last.
+
+## The whole picture
+
+```mermaid
+flowchart LR
+    subgraph sources["Sources"]
+        csv["11 CSVs in data/<br/>from generate_yuktikara.py"]
+        rfid["RFID floor readings<br/>no source yet"]
+    end
+    subgraph onelake["OneLake"]
+        lh["Lakehouse<br/>11 tables"]
+        eh["Eventhouse<br/>live floor stock, KQL"]
+    end
+    subgraph meaning["Meaning"]
+        sm["Semantic model<br/>Net Sales measure"]
+        ont["Ontology and graph<br/>net sales defined once"]
+    end
+    subgraph fabric["In Fabric"]
+        rpt["Net sales report"]
+        lha["Lakehouse agent<br/>the control"]
+        ona["Ontology agent"]
+        ops["Rule and operations agent<br/>floor below FloorMinQty"]
+    end
+    subgraph beyond["Beyond Fabric"]
+        app["Store app<br/>replenishment tasks"]
+        cop["Copilot Studio, Microsoft 365"]
+        mcp["Ontology MCP server"]
+        pol["Returns policy index"]
+    end
+
+    csv -- "manual upload" --> lh
+    rfid -- streams --> eh
+    lh -- "Direct Lake" --> sm
+    lh -- "bound by hand" --> ont
+    eh -- "time series" --> ont
+    sm --> rpt
+    lh -- "raw tables" --> lha
+    ont -- grounds --> ona
+    ont -- monitors --> ops
+    ops -- "raises tasks" --> app
+    app -- "writes back" --> lh
+    ona -- publishes --> cop
+    ont -- "same definitions" --> mcp
+    pol -- "policy answers" --> ona
+
+    classDef repo fill:#d7f3ef,stroke:#2f8f82,color:#111
+    classDef build fill:#fbe8cc,stroke:#b7791f,color:#111
+    classDef extra fill:#e6e1ff,stroke:#6b5bd6,color:#111
+    classDef missing fill:#ffffff,stroke:#b7791f,color:#111,stroke-dasharray:5 4
+    class csv repo
+    class lh,eh,sm,ont,rpt,lha,ona,ops,app,mcp build
+    class cop,pol extra
+    class rfid missing
+```
+
+Teal is in this repo today, amber you build in the Fabric portal, and violet needs Azure or extra
+licences. A dashed box has nothing behind it yet.
+
+## Components
+
+| Component | Reads from | What it holds | Episode |
+|---|---|---|---|
+| Lakehouse | The 11 CSVs uploaded by hand, or written by `fabric/refresh_yuktikara_data.ipynb` with current dates | The tables in [data-model.md](data-model.md), typed as that page says | 1 |
+| Semantic model | Lakehouse, over Direct Lake | Relationships to `DimDate` on `OrderDate` and `ReturnDate`, and a Net Sales measure | 1 |
+| Ontology and graph | Lakehouse tables, bound by hand | Stores, products, variants, orders, lines and returns as entities, with the net sales definition | 1 |
+| Net sales report | Semantic model | The figure people already trust, which the ontology agent should match | 2 |
+| Lakehouse agent | The 11 lakehouse tables, with no definition | The control: joins and money columns worked out per question | 2 |
+| Ontology agent | The ontology | The agent under test | 2 |
+| Eventhouse | RFID floor readings, streamed | Live floor quantity for RFID-tagged variants (footwear and apparel) at the 18 physical stores | 3 |
+| Rule and operations agent | The ontology, with the eventhouse time series | Fires when floor stock drops below `FloorMinQty`, then asks the store in Teams to refill from the backroom | 4 |
+| Store app | The operations agent | Replenishment tasks, written back to the lakehouse | 5 |
+| Copilot Studio, MCP server | The ontology agent and the ontology | The same definitions, reached from Microsoft 365 and from outside tools | 6 |
+| Returns policy index | A returns policy document | Policy answers alongside the ontology agent | 6 |
+
+`StoreInventory.csv` is the batch snapshot of the same stock the RFID feed reports live, so episodes 3 and 4
+start from the lakehouse table and add the stream on top.
+
+## Two agents, one question
+
+Both agents read the same data, but only the ontology agent knows what the business means by net sales.
+The question never says "net": that is the trap, and the [README](../README.md#the-definition-everything-hangs-on)
+lists the four totals an agent can land on.
+
+```mermaid
+flowchart TD
+    q["What were our sales last quarter?"]
+    q --> lha["Lakehouse agent<br/>11 raw tables, no definition"]
+    q --> ona["Ontology agent<br/>net sales defined once"]
+    lha --> log["Rehearsal log<br/>docs/rehearsal-template.csv"]
+    ona --> log
+    oracle["expected_answers.json<br/>from oracle_yuktikara.py"] -- marks --> log
+```
+
+Each question runs three times per agent. The log records the answer, whether it matches the oracle, the
+definition the agent stated and whether the chat was reset. `expected_answers.json` is only for marking:
+never give it to an agent.
+
+## Build order
+
+Episodes 1 to 4 run entirely inside Fabric. Each one adds a layer to the same workspace, so nothing is
+rebuilt between episodes.
+
+| Episode | Name | What gets built | Needs | In this repo |
+|---|---|---|---|---|
+| 1 | Foundation | Lakehouse, semantic model and ontology, all by hand | A Fabric capacity with the ontology and graph previews on | `data/`, [data-model.md](data-model.md) |
+| 2 | Two agents | Lakehouse agent and ontology agent, plus the net sales report, rehearsed on Q1-Q6 | Fabric only | [rehearsal-template.csv](rehearsal-template.csv), `data/expected_answers.json` |
+| 3 | Live floor | RFID readings streamed into an eventhouse and bound to the ontology as time series | Fabric only | `StoreInventory.csv` as the starting snapshot |
+| 4 | Watching agent | One rule on floor stock, and an operations agent that asks in Teams | Fabric, plus Teams | `FloorMinQty` in `StoreInventory.csv` |
+| 5 | Store app | An app where managers work through replenishment tasks | To be decided | Nothing yet |
+| 6 | One assistant | Publish through Copilot Studio, open the ontology over MCP, add the returns policy index | Azure or extra licences | Nothing yet |
+
+## Open questions
+
+- What produces the RFID stream? Nothing in this repo does yet.
+- Does "last quarter" mean 2026-Q2, the last complete quarter, or 2026-Q3, which only covers July and August?
+- Which questions are Q1-Q6? The rehearsal template has rows for them but they are not written down.
+- Which capacity size runs data agents, the ontology and graph together?
+- Episode 6 needs a returns policy document, which does not exist yet.

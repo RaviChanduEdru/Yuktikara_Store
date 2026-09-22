@@ -15,8 +15,8 @@ from datetime import date, timedelta
 from pathlib import Path
 
 SEED = 20260922
-START = date(2025, 1, 1)
-END = date(2026, 8, 31)
+# The snapshot committed in data/. Pass --end for a window that ends on another day.
+DEFAULT_END = date(2026, 8, 31)
 TAX_RATE = 0.0825
 
 # Cascade Ridge runs small, so buyers of the common smaller sizes send it back as "Too small".
@@ -144,7 +144,22 @@ def daterange(start: date, end: date):
         day += timedelta(days=1)
 
 
-def build_products(rng: random.Random):
+def window_start(end: date) -> date:
+    # A complete previous year plus the current year to date, so "last year" is always answerable.
+    return date(end.year - 1, 1, 1)
+
+
+def parse_end(value: str) -> date:
+    if value == "today":
+        return date.today()
+    if value == "yesterday":
+        return date.today() - timedelta(days=1)
+    return date.fromisoformat(value)
+
+
+def build_products(rng: random.Random, start: date):
+    yy = start.year % 100
+    seasons = [f"SS{yy:02d}", f"FW{yy:02d}", f"SS{(yy + 1) % 100:02d}", "AllSeason"]
     products = []
     variants = []
     pid = 0
@@ -172,10 +187,10 @@ def build_products(rng: random.Random):
                     "DepartmentName": dept,
                     "CategoryName": category,
                     "SupplierID": supplier,
-                    "SeasonCode": rng.choice(["SS25", "FW25", "SS26", "AllSeason"]),
+                    "SeasonCode": rng.choice(seasons),
                     "ListPrice": money(price_cents),
                     "UnitCost": money(cost_cents),
-                    "LaunchDate": (START - timedelta(days=rng.randint(30, 540))).isoformat(),
+                    "LaunchDate": (start - timedelta(days=rng.randint(30, 540))).isoformat(),
                     "IsRfidTagged": "true" if dept != "Equipment" else "false",
                 })
                 if dept == "Footwear":
@@ -203,7 +218,7 @@ def build_products(rng: random.Random):
     return products, variants
 
 
-def build_customers(rng: random.Random, count: int):
+def build_customers(rng: random.Random, count: int, start: date):
     customers = []
     store_ids = [s[0] for s in STORES if s[7] != "Ecommerce"]
     for i in range(1, count + 1):
@@ -214,7 +229,7 @@ def build_customers(rng: random.Random, count: int):
             "CustomerID": f"C{i:05d}",
             "CustomerName": f"{first} {last}",
             "LoyaltyTier": rng.choices(LOYALTY_TIERS, LOYALTY_WEIGHTS)[0],
-            "JoinDate": (START - timedelta(days=rng.randint(1, 1800))).isoformat(),
+            "JoinDate": (start - timedelta(days=rng.randint(1, 1800))).isoformat(),
             "HomeCity": home[3],
             "HomeStateCode": home[4],
             "PreferredStoreID": rng.choice(store_ids),
@@ -222,7 +237,7 @@ def build_customers(rng: random.Random, count: int):
     return customers
 
 
-def markdown_rate(rng: random.Random, day: date, dept: str) -> float:
+def markdown_rate(rng: random.Random, day: date) -> float:
     clearance = day.month in (1, 2) or day.month in (7, 8)
     if clearance and rng.random() < 0.42:
         return rng.choice([0.15, 0.20, 0.25, 0.30, 0.40])
@@ -234,14 +249,21 @@ def markdown_rate(rng: random.Random, day: date, dept: str) -> float:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate the Yuktikara Store dataset.")
     parser.add_argument("--out", default=str(Path(__file__).resolve().parent.parent / "data"))
+    parser.add_argument(
+        "--end", type=parse_end, default=DEFAULT_END,
+        help="Last day of data: YYYY-MM-DD, 'yesterday' or 'today' (machine's local date; UTC in Fabric). "
+             f"Default {DEFAULT_END}, the committed snapshot.",
+    )
     args = parser.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
+    end = args.end
+    start = window_start(end)
 
     rng = random.Random(SEED)
 
-    products, variants = build_products(rng)
-    customers = build_customers(rng, 6200)
+    products, variants = build_products(rng, start)
+    customers = build_customers(rng, 6200, start)
 
     by_dept: dict[str, list] = {"Footwear": [], "Apparel": [], "Equipment": []}
     for v in variants:
@@ -263,7 +285,7 @@ def main() -> int:
     order_seq = 0
     line_index = []
 
-    for day in daterange(START, END):
+    for day in daterange(start, end):
         weekend = day.weekday() >= 5
         for store in STORES:
             store_id, _, _, _, _, _, _, fmt, _, opened = (
@@ -280,7 +302,7 @@ def main() -> int:
                 order_id = f"SO{order_seq:06d}"
                 channel = "Online" if fmt == "Ecommerce" else "Store"
                 status = rng.choices(ORDER_STATUS, ORDER_STATUS_WEIGHTS)[0]
-                if day > END - timedelta(days=6) and status == "Completed" and rng.random() < 0.45:
+                if day > end - timedelta(days=6) and status == "Completed" and rng.random() < 0.45:
                     status = "Pending"
                 n_lines = rng.choices([1, 2, 3, 4, 5], [0.42, 0.28, 0.17, 0.09, 0.04])[0]
                 gross = 0
@@ -295,12 +317,13 @@ def main() -> int:
                     variant = rng.choices(pool, cum_weights=dept_cum[dept])[0]
                     qty = rng.choices([1, 2, 3], [0.86, 0.11, 0.03])[0]
                     unit = variant["_price_cents"]
-                    rate = markdown_rate(rng, day, dept)
+                    rate = markdown_rate(rng, day)
                     line_gross = unit * qty
                     line_discount = int(round(line_gross * rate))
                     gross += line_gross
                     discount += line_discount
                     order_lines.append({
+                        "OrderLineID": f"{order_id}-{line_no}",
                         "OrderID": order_id,
                         "OrderLineNumber": line_no,
                         "VariantID": variant["VariantID"],
@@ -353,7 +376,7 @@ def main() -> int:
         lag = rng.choices([7, 14, 21, 30, 45], [0.30, 0.28, 0.20, 0.14, 0.08])[0]
         lag += rng.randint(-5, 5)
         return_date = item["Date"] + timedelta(days=max(2, lag))
-        if return_date > END:
+        if return_date > end:
             continue
         if planted and rng.random() < 0.62:
             reason = "RR1"
@@ -376,6 +399,7 @@ def main() -> int:
             "ReturnID": f"RT{len(returns) + 1:06d}",
             "OrderID": item["OrderID"],
             "OrderLineNumber": item["LineNo"],
+            "OrderLineID": f"{item['OrderID']}-{item['LineNo']}",
             "VariantID": item["VariantID"],
             "ProductID": item["ProductID"],
             "ReturnDate": return_date.isoformat(),
@@ -399,10 +423,11 @@ def main() -> int:
             floor = max(0, int(rng.gauss(floor_min * 2.1, floor_min * 0.9)))
             backroom = max(0, int(rng.gauss(floor_min * 1.6, floor_min * 1.1)))
             inventory.append({
+                "InventoryID": f"{store[0]}-{v['VariantID']}",
                 "StoreID": store[0],
                 "VariantID": v["VariantID"],
                 "ProductID": v["ProductID"],
-                "SnapshotDate": END.isoformat(),
+                "SnapshotDate": end.isoformat(),
                 "FloorQty": floor,
                 "BackroomQty": backroom,
                 "OnHandQty": floor + backroom,
@@ -411,7 +436,7 @@ def main() -> int:
             })
 
     dim_date = []
-    for day in daterange(START, END):
+    for day in daterange(start, end):
         quarter = (day.month - 1) // 3 + 1
         dim_date.append({
             "DateKey": day.strftime("%Y%m%d"),
@@ -459,13 +484,14 @@ def main() -> int:
     }
 
     manifest = {"company": "Yuktikara Store", "seed": SEED,
-                "period": {"start": START.isoformat(), "end": END.isoformat()},
+                "period": {"start": start.isoformat(), "end": end.isoformat()},
                 "tax_rate": TAX_RATE, "tables": {}}
 
     for filename, rows in tables.items():
         path = out / filename
         with path.open("w", newline="", encoding="utf-8") as fh:
-            writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+            # LF, not the csv module's default CRLF, so the hashes match a git checkout (.gitattributes).
+            writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), lineterminator="\n")
             writer.writeheader()
             writer.writerows(rows)
         raw = path.read_bytes()
@@ -475,9 +501,9 @@ def main() -> int:
             "sha256": hashlib.sha256(raw).hexdigest(),
         }
 
-    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
 
-    print(f"Yuktikara Store — {START} to {END}")
+    print(f"Yuktikara Store — {start} to {end}")
     for filename, meta in manifest["tables"].items():
         print(f"  {filename:24s} {meta['rows']:>7,} rows  {meta['bytes'] / 1_048_576:.2f} MB")
     return 0

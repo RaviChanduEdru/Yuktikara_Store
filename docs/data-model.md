@@ -1,7 +1,13 @@
 # Data model
 
-Eleven tables, generated for 2025-01-01 to 2026-08-31. Every file is UTF-8 CSV with a header row.
-Money is written with two decimal places and no thousands separator or currency symbol.
+Eleven tables. The committed snapshot in `data/` covers 2025-01-01 to 2026-08-31, and the row counts below
+describe it. A run of `fabric/refresh_yuktikara_data.ipynb` covers 1 January of the previous year to its end
+date, so its counts are larger or smaller; the schema is identical. Every file is UTF-8 CSV with a header
+row and LF line endings. Money is written with two decimal places and no thousands separator or currency
+symbol.
+
+In Fabric, the notebook writes each CSV to a snake_case table (`SalesOrder.csv` → `sales_order`) with the
+types listed here: `date` for dates, `double` for money, `integer` for counts and `boolean` for flags.
 
 Keep the load order below when you build the lakehouse: dimensions first, then the fact tables that
 reference them.
@@ -127,8 +133,9 @@ the most common way to get the answer wrong.
 
 | Column | Type | Notes |
 |---|---|---|
-| `OrderID` | string | Composite key part 1, foreign key to `SalesOrder` |
-| `OrderLineNumber` | integer | Composite key part 2, restarts at 1 per order |
+| `OrderLineID` | string | Primary key, `<OrderID>-<OrderLineNumber>`, for example `SO000001-1`. A single-column key, because ontology relationships match one column per side |
+| `OrderID` | string | Foreign key to `SalesOrder` |
+| `OrderLineNumber` | integer | Restarts at 1 per order |
 | `VariantID` | string | Foreign key to `ProductVariant` |
 | `ProductID` | string | Denormalised from the variant, so product questions need one hop fewer |
 | `Quantity` | integer | 1-3 |
@@ -143,8 +150,9 @@ A returned order line. Returns only exist against orders that were `Completed` o
 | Column | Type | Notes |
 |---|---|---|
 | `ReturnID` | string | Primary key, `RT000001`- |
-| `OrderID` | string | With `OrderLineNumber`, foreign key to `SalesOrderLine` |
+| `OrderID` | string | The order the returned line belongs to |
 | `OrderLineNumber` | integer | |
+| `OrderLineID` | string | Foreign key to `SalesOrderLine` |
 | `VariantID` | string | Foreign key to `ProductVariant` |
 | `ProductID` | string | Denormalised |
 | `ReturnDate` | date | **Net sales counts a return on this date, not on the order date.** A Q1 sale returned in Q2 reduces Q2 |
@@ -165,15 +173,16 @@ Of the 6,749 returns, 5,724 are `Accepted`, totalling 970,051.76.
 | `ReturnReasonName` | string | `Too small`, `Too large`, `Not as described`, `Damaged or faulty`, `Wrong item shipped`, `Arrived too late`, `Changed mind`, `Found a better price` |
 | `ReturnCategory` | string | `Fit`, `Description`, `Quality`, `Logistics`, `Customer` |
 
-## StoreInventory.csv — 6,916 rows
+## StoreInventory.csv — 7,025 rows
 
 A single snapshot dated 2026-08-31, covering RFID-tagged variants only. This is the batch counterpart to
 the live RFID stream: `FloorMinQty` is the threshold the operations agent watches.
 
 | Column | Type | Notes |
 |---|---|---|
+| `InventoryID` | string | Primary key, `<StoreID>-<VariantID>`, for example `ST001-V00002` |
 | `StoreID` | string | Physical stores only |
-| `VariantID` | string | With `StoreID`, the composite key |
+| `VariantID` | string | Foreign key to `ProductVariant` |
 | `ProductID` | string | Denormalised |
 | `SnapshotDate` | date | `2026-08-31` for every row |
 | `FloorQty` | integer | On the shop floor |
@@ -207,3 +216,7 @@ DimDate 1─* SalesReturn          (ReturnDate)
 `SalesReturn` reaching `Store` twice — once through its order and once through `ReturnStoreID` — is what
 makes "which store absorbs the most online returns" answerable, and it is the kind of question that is
 awkward against raw tables and natural against an ontology.
+
+In the ontology these become 13 named relationship types, and `Product` becomes the entity type
+`ProductStyle` because `PRODUCT` is a GQL reserved word. The full binding, with every property name, is in
+[ontology-bindings.md](ontology-bindings.md).

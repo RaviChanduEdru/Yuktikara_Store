@@ -207,10 +207,21 @@ def main() -> int:
         })
     store_rows.sort(key=lambda r: Decimal(r["subtotal_sales_statuses"]), reverse=True)
 
-    dept_net: dict[str, Decimal] = defaultdict(lambda: ZERO)
+    dept_subtotal: dict[str, Decimal] = defaultdict(lambda: ZERO)
+    dept_returns: dict[str, Decimal] = defaultdict(lambda: ZERO)
     for line in lines:
         if line["OrderID"] in sales_orders:
-            dept_net[products[line["ProductID"]]["DepartmentName"]] += dec(line["LineTotal"])
+            dept_subtotal[products[line["ProductID"]]["DepartmentName"]] += dec(line["LineTotal"])
+    for r in accepted:
+        dept_returns[products[r["ProductID"]]["DepartmentName"]] += dec(r["ReturnAmount"])
+    department = {
+        dept: {
+            "subtotal_sales_statuses": f"{dept_subtotal[dept]:.2f}",
+            "accepted_returns": f"{dept_returns[dept]:.2f}",
+            "net_sales": f"{dept_subtotal[dept] - dept_returns[dept]:.2f}",
+        }
+        for dept in sorted(dept_subtotal, key=lambda d: dept_subtotal[d] - dept_returns[d], reverse=True)
+    }
 
     oracle = {
         "company": "Yuktikara Store",
@@ -253,12 +264,12 @@ def main() -> int:
             for rid, count in sorted(reason_counts.items(), key=lambda kv: kv[1], reverse=True)
         },
         "net_sales_by_channel": channel,
-        "net_sales_by_department": {d: f"{v:.2f}" for d, v in sorted(dept_net.items(), key=lambda kv: kv[1], reverse=True)},
+        "net_sales_by_department": department,
         "stores": store_rows,
     }
 
     out = data / "expected_answers.json"
-    out.write_text(json.dumps(oracle, indent=2) + "\n", encoding="utf-8")
+    out.write_text(json.dumps(oracle, indent=2) + "\n", encoding="utf-8", newline="\n")
 
     t = oracle["totals"]
     print("Yuktikara Store ground truth")

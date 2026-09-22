@@ -9,58 +9,58 @@
   "tables": {
     "Store.csv": {
       "rows": 19,
-      "bytes": 1970,
-      "sha256": "9f79ebde5d7d054ec14b10084990fe3e2dba802d87cafc000e086283de312c36"
+      "bytes": 1950,
+      "sha256": "8d9329f89553dde165c68c9b48dafab24f17ba99e986c00bbff4631d930ff80f"
     },
     "Supplier.csv": {
       "rows": 7,
-      "bytes": 359,
-      "sha256": "b94447e101c3030d18f17538634eaf380ac21ce1f562412d5741f1a1932357e4"
+      "bytes": 351,
+      "sha256": "deb96d4226fa826c92093e17053331b68d141a28b35f4931a229750f5b0f89f6"
     },
     "Product.csv": {
       "rows": 52,
-      "bytes": 5466,
-      "sha256": "53761dcc8a9d989bba031a35ff406891dc0a4a469efedb133d9b39620b6a8fae"
+      "bytes": 5413,
+      "sha256": "c09ccb46889e496923ee364a69e3dcd7fb3cde8d13d35543a9618ff8935b9c33"
     },
     "ProductVariant.csv": {
       "rows": 744,
-      "bytes": 33373,
-      "sha256": "478fcaa90bd8eeece87c46ebc903c4352cdd3ea5032bdf171e8f442fd374943b"
+      "bytes": 32628,
+      "sha256": "726d8df20760199d607cfa251fe12aab7055877fbdb044d5b05c454d501cd136"
     },
     "Customer.csv": {
       "rows": 6200,
-      "bytes": 364275,
-      "sha256": "84f8f04fb9c28e7e9aea1d10ccaf267f8f55dd835f70124704428968107ef8d2"
+      "bytes": 358074,
+      "sha256": "7722e5c5f269e1bc6a1e7d16013211afaae969a06b4159117478d06cf2090a64"
     },
     "DimDate.csv": {
       "rows": 608,
-      "bytes": 42529,
-      "sha256": "3467628161e4ac78ec04705fa55ef2e51f07db35a181e5d73bd96894ee07d3fc"
+      "bytes": 41920,
+      "sha256": "e66db5637ca014d499da94fb2c924c75c8115b54e65fe673745495f5f2f4eef4"
     },
     "SalesOrder.csv": {
       "rows": 33757,
-      "bytes": 3733207,
-      "sha256": "a6a11e62518f5504d1f30f3be548a6f06de9ac6b503ccbd1af3bd1624f22d60a"
+      "bytes": 3699449,
+      "sha256": "f21c31842209c4ae93cf36d184250b087717b13862cfce30ac0de052cda792f0"
     },
     "SalesOrderLine.csv": {
       "rows": 69198,
-      "bytes": 3167965,
-      "sha256": "708854c6968b54f1a99e69eb671fe02281c23c3fe9f8326cdab661998e614f48"
+      "bytes": 3859956,
+      "sha256": "f86c69414a238b5b165b34c7825e0aeafd5336d2814f95eec71d7b4eadc6e40c"
     },
     "SalesReturn.csv": {
       "rows": 6749,
-      "bytes": 526379,
-      "sha256": "31f50f0b736b87dc911c9d2295957a7d6ef88f5e4e5d85d65b02297c4e128a93"
+      "bytes": 593880,
+      "sha256": "c7a567a239a36226c20674004d0e0c25fc534c1b8a192a09e39643a29e0b52b5"
     },
     "ReturnReason.csv": {
       "rows": 8,
-      "bytes": 279,
-      "sha256": "5c155b7eae88eb933d6c64853bd9625455101a11e922e984a2eae2bbb33d497a"
+      "bytes": 270,
+      "sha256": "719ff55cb88ad2e2bcadf8b6738f244dd694182a6a3178a4d6f4900a194af271"
     },
     "StoreInventory.csv": {
       "rows": 7025,
-      "bytes": 295364,
-      "sha256": "806787dcc136d4e6cc1096cf37c84032045d95aa5c514039c7083f592a46c457"
+      "bytes": 379675,
+      "sha256": "e4ea6e854ab3a4d6b5b0355421e4108e2f736147fab552e1e22581eeb8eb93cd"
     }
   }
 }

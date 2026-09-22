@@ -432,9 +432,21 @@
     }
   },
   "net_sales_by_department": {
-    "Equipment": "4510193.02",
-    "Footwear": "4041750.35",
-    "Apparel": "3478183.80"
+    "Equipment": {
+      "subtotal_sales_statuses": "4510193.02",
+      "accepted_returns": "140251.53",
+      "net_sales": "4369941.49"
+    },
+    "Footwear": {
+      "subtotal_sales_statuses": "4041750.35",
+      "accepted_returns": "509812.44",
+      "net_sales": "3531937.91"
+    },
+    "Apparel": {
+      "subtotal_sales_statuses": "3478183.80",
+      "accepted_returns": "319987.79",
+      "net_sales": "3158196.01"
+    }
   },
   "stores": [
     {
