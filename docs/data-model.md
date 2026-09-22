@@ -1,7 +1,7 @@
 # Data model
 
-Seventeen tables across six business areas: selling, returns, products, customers, buying and
-stock. The committed snapshot in `data/` covers 2025-01-01 to 2026-08-31, and the row counts below
+Seventeen tables across six business areas: selling (orders, returns, promotions and targets), products
+and suppliers, stores and their stock, buying, customers, and a shared calendar. The committed snapshot in `data/` covers 2025-01-01 to 2026-08-31, and the row counts below
 describe it. A regenerated dataset covers 1 January of the previous year to the end date you pass, so its counts
 are larger or smaller; the schema is identical. Every file is UTF-8 CSV with a header
 row and LF line endings. Money is written with two decimal places and no thousands separator or currency

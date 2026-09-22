@@ -1,9 +1,11 @@
 # Architecture
 
-Eleven tables go into a Fabric lakehouse, either uploaded by hand from the committed snapshot or written by
-the load notebook, after regenerating them for current dates (see the README). A semantic model and an ontology give them meaning, and two
-data agents answer the same questions so you can see what the ontology adds. A live RFID feed and an
-operations agent come next. Publishing beyond Fabric comes last.
+Seventeen tables go into a Fabric lakehouse: the committed snapshot, uploaded to Files and written as typed
+tables by the load notebook after you regenerate them for current dates (see the README). They cover what the
+business runs on: selling and returns, products and suppliers, buying and deliveries, stock month by month,
+promotions and the plan. A semantic model and an ontology give them meaning, and two data agents are put to
+the same scenarios so you can see what the ontology adds. A live RFID feed and an operations agent come next.
+Publishing beyond Fabric comes last.
 
 ## The whole picture
 
@@ -72,9 +74,9 @@ licences. A dashed box has nothing behind it yet.
 |---|---|---|---|
 | Lakehouse | The 17 CSVs, uploaded to Files and written as typed tables by `fabric/load_yuktikara_data.ipynb` | The tables in [data-model.md](data-model.md), typed as that page says | 1 |
 | Semantic model | Lakehouse, over Direct Lake | Relationships to `DimDate` on `OrderDate` and `ReturnDate`, and a Net Sales measure | 1 |
-| Ontology and graph | Lakehouse tables, bound by hand | Stores, products, variants, orders, lines and returns as entities, with the net sales definition | 1 |
+| Ontology and graph | Lakehouse tables, bound by hand | 15 entity types and 22 relationships: stores, products and variants, customers, orders and lines, returns and reasons, stock now and by month, purchase orders and their lines, promotions and targets | 1 |
 | Net sales report | Semantic model | The figure people already trust, which the ontology agent should match | 2 |
-| Lakehouse agent | The 11 lakehouse tables, with no definition | The control: joins and money columns worked out per question | 2 |
+| Lakehouse agent | The 17 lakehouse tables, with no definition | The control: joins and money columns worked out per question | 2 |
 | Ontology agent | The ontology | The agent under test | 2 |
 | Eventstream | RFID readings as they happen | Routes each reading to the eventhouse, with no code between source and destination | 3 |
 | Eventhouse | The eventstream | Live floor quantity for RFID-tagged variants (footwear and apparel) at the 18 physical stores | 3 |
@@ -86,17 +88,22 @@ licences. A dashed box has nothing behind it yet.
 `StoreInventory.csv` is the batch snapshot of the same stock the RFID feed reports live, so episodes 3 and 4
 start from the lakehouse table and add the stream on top.
 
-## Two agents, one question
+## Two agents, six scenarios
 
-Both agents read the same data, but only the ontology agent knows what the business means by net sales.
-The question never says "net": that is the trap, and the [README](../README.md#the-definition-everything-hangs-on)
-lists the four totals an agent can land on.
+Both agents read the same data. Only the ontology agent gets the business's definitions and a map of how
+things connect. The scenarios reach across the business, so a single well-phrased query rarely covers one:
+sales last quarter, why a boot comes back, which supplier is letting us down, which shelves need refilling,
+whether the clearance paid, and which stores are behind plan.
+
+The sales one is the definition trap: the question never says "net", and the
+[README](../README.md#definitions-the-thing-a-foundation-writes-down) lists the four totals an agent can
+land on.
 
 ```mermaid
 flowchart TD
-    q["What were our sales last quarter?"]
-    q --> lha["Lakehouse agent<br/>11 raw tables, no definition"]
-    q --> ona["Ontology agent<br/>net sales defined once"]
+    q["Six scenarios<br/>sales, returns, suppliers, shelves, promotions, plan"]
+    q --> lha["Lakehouse agent<br/>17 raw tables, no definitions"]
+    q --> ona["Ontology agent<br/>definitions and a map"]
     lha --> log["Rehearsal log<br/>docs/rehearsal-template.csv"]
     ona --> log
     oracle["expected_answers.json<br/>from oracle_yuktikara.py"] -- marks --> log
@@ -125,6 +132,7 @@ rebuilt between episodes.
 - What produces the RFID stream? Nothing in this repo does yet. An eventstream routes events, but something
   still has to send them, and a sender is code.
 - Does "last quarter" mean 2026-Q2, the last complete quarter, or 2026-Q3, which only covers July and August?
-- Which questions are Q1-Q6? The rehearsal template has rows for them but they are not written down.
+- How much of each scenario can the control agent reach with example queries alone? That is what makes the
+  comparison fair rather than rigged.
 - Which capacity size runs data agents, the ontology and graph together?
 - Episode 6 needs a returns policy document, which does not exist yet.
