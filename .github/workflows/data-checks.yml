@@ -1,0 +1,50 @@
+name: Data checks
+
+# Proves the committed dataset is exactly what the scripts produce, that the stock ledger reconciles with
+# sales and deliveries, and that the ontology design is valid and its guide is in sync.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: The committed data is what the generator produces
+        run: |
+          python scripts/generate_yuktikara.py --out fresh
+          python - <<'PY'
+          import filecmp, pathlib, sys
+          committed, fresh = pathlib.Path("data"), pathlib.Path("fresh")
+          differ = [f.name for f in sorted(committed.glob("*.csv"))
+                    if not filecmp.cmp(f, fresh / f.name, shallow=False)]
+          missing = [f.name for f in sorted(fresh.glob("*.csv")) if not (committed / f.name).exists()]
+          if differ or missing:
+              sys.exit(f"regenerating changed {differ}, and data/ is missing {missing}. "
+                       "Run the generator and commit the result.")
+          print(f"{len(list(fresh.glob('*.csv')))} files match byte for byte")
+          PY
+
+      - name: The answer key matches, and the ledger reconciles
+        # The oracle asserts that the stock ledger balances, opens where the last month closed, closes on the
+        # counted snapshot, and that its receipts and sales equal the deliveries and order lines.
+        run: |
+          python scripts/oracle_yuktikara.py --data fresh
+          python - <<'PY'
+          import filecmp, sys
+          if not filecmp.cmp("data/expected_answers.json", "fresh/expected_answers.json", shallow=False):
+              sys.exit("data/expected_answers.json is out of date. Run scripts/oracle_yuktikara.py and commit it.")
+          print("answer key matches")
+          PY
+
+      - name: The ontology design is valid and its guide is in sync
+        run: python scripts/check_ontology.py
