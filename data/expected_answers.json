@@ -1,0 +1,593 @@
+{
+  "company": "Yuktikara Store",
+  "definition": "Net sales = SubTotal of orders whose OrderStatus is Completed or Shipped, minus ReturnAmount of returns whose ReturnStatus is Accepted, counted on ReturnDate. Cancelled and Pending orders are not sales. Tax is not sales.",
+  "totals": {
+    "gross_all_statuses": "13876486.40",
+    "discount_all_statuses": "714614.34",
+    "gross_sales_statuses": "12680858.45",
+    "subtotal_sales_statuses": "12030127.17",
+    "ordertotal_sales_statuses_includes_tax": "13022622.19",
+    "accepted_returns": "970051.76",
+    "net_sales": "11060075.41",
+    "order_count": 33757,
+    "line_count": 69198,
+    "return_count": 6749,
+    "accepted_return_count": 5724
+  },
+  "net_sales_by_year": {
+    "2025": {
+      "gross_all_statuses": "8436983.15",
+      "subtotal_sales_statuses": "7397173.73",
+      "accepted_returns": "557065.99",
+      "net_sales": "6840107.74"
+    },
+    "2026": {
+      "gross_all_statuses": "5439503.25",
+      "subtotal_sales_statuses": "4632953.44",
+      "accepted_returns": "412985.77",
+      "net_sales": "4219967.67"
+    }
+  },
+  "net_sales_by_quarter": {
+    "2025-Q1": {
+      "gross_all_statuses": "1355806.60",
+      "subtotal_sales_statuses": "1154982.97",
+      "accepted_returns": "74284.99",
+      "net_sales": "1080697.98"
+    },
+    "2025-Q2": {
+      "gross_all_statuses": "2467949.45",
+      "subtotal_sales_statuses": "2226131.18",
+      "accepted_returns": "155283.87",
+      "net_sales": "2070847.31"
+    },
+    "2025-Q3": {
+      "gross_all_statuses": "2301404.75",
+      "subtotal_sales_statuses": "1932371.96",
+      "accepted_returns": "166175.15",
+      "net_sales": "1766196.81"
+    },
+    "2025-Q4": {
+      "gross_all_statuses": "2311822.35",
+      "subtotal_sales_statuses": "2083687.62",
+      "accepted_returns": "161321.98",
+      "net_sales": "1922365.64"
+    },
+    "2026-Q1": {
+      "gross_all_statuses": "1390131.65",
+      "subtotal_sales_statuses": "1177181.82",
+      "accepted_returns": "123267.19",
+      "net_sales": "1053914.63"
+    },
+    "2026-Q2": {
+      "gross_all_statuses": "2466012.55",
+      "subtotal_sales_statuses": "2221189.45",
+      "accepted_returns": "173388.82",
+      "net_sales": "2047800.63"
+    },
+    "2026-Q3": {
+      "gross_all_statuses": "1583359.05",
+      "subtotal_sales_statuses": "1234582.17",
+      "accepted_returns": "116329.76",
+      "net_sales": "1118252.41"
+    }
+  },
+  "net_sales_by_month": {
+    "2025-01": {
+      "gross_all_statuses": "410579.40",
+      "subtotal_sales_statuses": "336387.40",
+      "accepted_returns": "13588.77",
+      "net_sales": "322798.63"
+    },
+    "2025-02": {
+      "gross_all_statuses": "362278.00",
+      "subtotal_sales_statuses": "294587.74",
+      "accepted_returns": "24257.82",
+      "net_sales": "270329.92"
+    },
+    "2025-03": {
+      "gross_all_statuses": "582949.20",
+      "subtotal_sales_statuses": "524007.83",
+      "accepted_returns": "36438.40",
+      "net_sales": "487569.43"
+    },
+    "2025-04": {
+      "gross_all_statuses": "729342.00",
+      "subtotal_sales_statuses": "660313.71",
+      "accepted_returns": "44141.70",
+      "net_sales": "616172.01"
+    },
+    "2025-05": {
+      "gross_all_statuses": "848726.75",
+      "subtotal_sales_statuses": "762941.10",
+      "accepted_returns": "53454.64",
+      "net_sales": "709486.46"
+    },
+    "2025-06": {
+      "gross_all_statuses": "889880.70",
+      "subtotal_sales_statuses": "802876.37",
+      "accepted_returns": "57687.53",
+      "net_sales": "745188.84"
+    },
+    "2025-07": {
+      "gross_all_statuses": "814386.40",
+      "subtotal_sales_statuses": "652164.98",
+      "accepted_returns": "60690.79",
+      "net_sales": "591474.19"
+    },
+    "2025-08": {
+      "gross_all_statuses": "772150.40",
+      "subtotal_sales_statuses": "632328.32",
+      "accepted_returns": "54036.77",
+      "net_sales": "578291.55"
+    },
+    "2025-09": {
+      "gross_all_statuses": "714867.95",
+      "subtotal_sales_statuses": "647878.66",
+      "accepted_returns": "51447.59",
+      "net_sales": "596431.07"
+    },
+    "2025-10": {
+      "gross_all_statuses": "624776.75",
+      "subtotal_sales_statuses": "564948.56",
+      "accepted_returns": "47191.83",
+      "net_sales": "517756.73"
+    },
+    "2025-11": {
+      "gross_all_statuses": "808781.25",
+      "subtotal_sales_statuses": "719185.72",
+      "accepted_returns": "51181.00",
+      "net_sales": "668004.72"
+    },
+    "2025-12": {
+      "gross_all_statuses": "878264.35",
+      "subtotal_sales_statuses": "799553.34",
+      "accepted_returns": "62949.15",
+      "net_sales": "736604.19"
+    },
+    "2026-01": {
+      "gross_all_statuses": "412607.95",
+      "subtotal_sales_statuses": "338259.20",
+      "accepted_returns": "53080.16",
+      "net_sales": "285179.04"
+    },
+    "2026-02": {
+      "gross_all_statuses": "396865.15",
+      "subtotal_sales_statuses": "323969.16",
+      "accepted_returns": "31760.41",
+      "net_sales": "292208.75"
+    },
+    "2026-03": {
+      "gross_all_statuses": "580658.55",
+      "subtotal_sales_statuses": "514953.46",
+      "accepted_returns": "38426.62",
+      "net_sales": "476526.84"
+    },
+    "2026-04": {
+      "gross_all_statuses": "711238.75",
+      "subtotal_sales_statuses": "639159.53",
+      "accepted_returns": "49110.82",
+      "net_sales": "590048.71"
+    },
+    "2026-05": {
+      "gross_all_statuses": "900287.20",
+      "subtotal_sales_statuses": "813004.90",
+      "accepted_returns": "62884.51",
+      "net_sales": "750120.39"
+    },
+    "2026-06": {
+      "gross_all_statuses": "854486.60",
+      "subtotal_sales_statuses": "769025.02",
+      "accepted_returns": "61393.49",
+      "net_sales": "707631.53"
+    },
+    "2026-07": {
+      "gross_all_statuses": "804514.15",
+      "subtotal_sales_statuses": "654246.48",
+      "accepted_returns": "62466.19",
+      "net_sales": "591780.29"
+    },
+    "2026-08": {
+      "gross_all_statuses": "778844.90",
+      "subtotal_sales_statuses": "580335.69",
+      "accepted_returns": "53863.57",
+      "net_sales": "526472.12"
+    }
+  },
+  "cancelled_gross_by_year": {
+    "2025": "404764.30",
+    "2026": "265357.90"
+  },
+  "pending_gross_by_year": {
+    "2025": "283035.35",
+    "2026": "242470.40"
+  },
+  "return_rate_by_department": {
+    "Apparel": {
+      "units_sold": 23585,
+      "units_returned": 2124,
+      "return_rate_pct": "9.01"
+    },
+    "Equipment": {
+      "units_sold": 25257,
+      "units_returned": 802,
+      "return_rate_pct": "3.18"
+    },
+    "Footwear": {
+      "units_sold": 25009,
+      "units_returned": 3073,
+      "return_rate_pct": "12.29"
+    }
+  },
+  "top_return_rate_products": [
+    {
+      "ProductID": "P0001",
+      "ProductName": "Cascade Ridge Hiking Boot",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP04",
+      "units_sold": 1547,
+      "units_returned": 297,
+      "return_rate_pct": "19.20",
+      "value_returned": "76513.18"
+    },
+    {
+      "ProductID": "P0010",
+      "ProductName": "Chinook Approach Shoe",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP03",
+      "units_sold": 1709,
+      "units_returned": 219,
+      "return_rate_pct": "12.81",
+      "value_returned": "22487.35"
+    },
+    {
+      "ProductID": "P0016",
+      "ProductName": "Kestrel Insulated Boot",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP07",
+      "units_sold": 1502,
+      "units_returned": 188,
+      "return_rate_pct": "12.52",
+      "value_returned": "39203.02"
+    },
+    {
+      "ProductID": "P0004",
+      "ProductName": "Granite Hiking Boot",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP06",
+      "units_sold": 1733,
+      "units_returned": 216,
+      "return_rate_pct": "12.46",
+      "value_returned": "49358.60"
+    },
+    {
+      "ProductID": "P0014",
+      "ProductName": "Wolverine Insulated Boot",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP01",
+      "units_sold": 1507,
+      "units_returned": 184,
+      "return_rate_pct": "12.21",
+      "value_returned": "32918.36"
+    },
+    {
+      "ProductID": "P0015",
+      "ProductName": "Cirque Insulated Boot",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP04",
+      "units_sold": 1412,
+      "units_returned": 172,
+      "return_rate_pct": "12.18",
+      "value_returned": "36016.85"
+    },
+    {
+      "ProductID": "P0008",
+      "ProductName": "Glacier Trail Runner",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP04",
+      "units_sold": 1551,
+      "units_returned": 184,
+      "return_rate_pct": "11.86",
+      "value_returned": "23580.53"
+    },
+    {
+      "ProductID": "P0012",
+      "ProductName": "Basin Approach Shoe",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP02",
+      "units_sold": 1652,
+      "units_returned": 195,
+      "return_rate_pct": "11.80",
+      "value_returned": "21454.53"
+    },
+    {
+      "ProductID": "P0013",
+      "ProductName": "Sawtooth Insulated Boot",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP05",
+      "units_sold": 1654,
+      "units_returned": 194,
+      "return_rate_pct": "11.73",
+      "value_returned": "32295.63"
+    },
+    {
+      "ProductID": "P0003",
+      "ProductName": "Timberline Hiking Boot",
+      "DepartmentName": "Footwear",
+      "SupplierID": "SUP03",
+      "units_sold": 1481,
+      "units_returned": 173,
+      "return_rate_pct": "11.68",
+      "value_returned": "26919.84"
+    }
+  ],
+  "top_style_size_breakdown": {
+    "ProductID": "P0001",
+    "ProductName": "Cascade Ridge Hiking Boot",
+    "sizes": [
+      {
+        "SizeCode": "7",
+        "sold": 34,
+        "returned": 4,
+        "return_rate_pct": "11.76"
+      },
+      {
+        "SizeCode": "7.5",
+        "sold": 54,
+        "returned": 18,
+        "return_rate_pct": "33.33"
+      },
+      {
+        "SizeCode": "8",
+        "sold": 137,
+        "returned": 46,
+        "return_rate_pct": "33.58"
+      },
+      {
+        "SizeCode": "8.5",
+        "sold": 126,
+        "returned": 40,
+        "return_rate_pct": "31.75"
+      },
+      {
+        "SizeCode": "9",
+        "sold": 199,
+        "returned": 44,
+        "return_rate_pct": "22.11"
+      },
+      {
+        "SizeCode": "9.5",
+        "sold": 236,
+        "returned": 68,
+        "return_rate_pct": "28.81"
+      },
+      {
+        "SizeCode": "10",
+        "sold": 258,
+        "returned": 19,
+        "return_rate_pct": "7.36"
+      },
+      {
+        "SizeCode": "10.5",
+        "sold": 144,
+        "returned": 12,
+        "return_rate_pct": "8.33"
+      },
+      {
+        "SizeCode": "11",
+        "sold": 161,
+        "returned": 27,
+        "return_rate_pct": "16.77"
+      },
+      {
+        "SizeCode": "11.5",
+        "sold": 105,
+        "returned": 9,
+        "return_rate_pct": "8.57"
+      },
+      {
+        "SizeCode": "12",
+        "sold": 52,
+        "returned": 8,
+        "return_rate_pct": "15.38"
+      },
+      {
+        "SizeCode": "13",
+        "sold": 41,
+        "returned": 2,
+        "return_rate_pct": "4.88"
+      }
+    ],
+    "reason_counts": {
+      "Too small": 190,
+      "Changed mind": 25,
+      "Too large": 19,
+      "Damaged or faulty": 14,
+      "Not as described": 12,
+      "Wrong item shipped": 11,
+      "Arrived too late": 6,
+      "Found a better price": 5
+    }
+  },
+  "return_reason_counts": {
+    "Changed mind": 1230,
+    "Too small": 1131,
+    "Damaged or faulty": 791,
+    "Too large": 728,
+    "Not as described": 635,
+    "Found a better price": 591,
+    "Wrong item shipped": 336,
+    "Arrived too late": 282
+  },
+  "net_sales_by_channel": {
+    "Online": {
+      "subtotal_sales_statuses": "1836059.49",
+      "accepted_returns": "222535.95",
+      "net_sales": "1613523.54"
+    },
+    "Store": {
+      "subtotal_sales_statuses": "10194067.68",
+      "accepted_returns": "747515.81",
+      "net_sales": "9446551.87"
+    }
+  },
+  "net_sales_by_department": {
+    "Equipment": "4510193.02",
+    "Footwear": "4041750.35",
+    "Apparel": "3478183.80"
+  },
+  "stores": [
+    {
+      "StoreID": "ST900",
+      "StoreName": "Yuktikara Online",
+      "RegionName": "Online",
+      "subtotal_sales_statuses": "1836059.49",
+      "returns_absorbed_at_store": "0.00",
+      "online_returns_absorbed": "0.00"
+    },
+    {
+      "StoreID": "ST001",
+      "StoreName": "Yuktikara Seattle Flagship",
+      "RegionName": "Pacific Northwest",
+      "subtotal_sales_statuses": "1046289.24",
+      "returns_absorbed_at_store": "80564.15",
+      "online_returns_absorbed": "9937.66"
+    },
+    {
+      "StoreID": "ST004",
+      "StoreName": "Yuktikara Portland Pearl",
+      "RegionName": "Pacific Northwest",
+      "subtotal_sales_statuses": "1023849.11",
+      "returns_absorbed_at_store": "82347.11",
+      "online_returns_absorbed": "10153.56"
+    },
+    {
+      "StoreID": "ST011",
+      "StoreName": "Yuktikara Denver LoDo",
+      "RegionName": "Colorado Front Range",
+      "subtotal_sales_statuses": "1003016.80",
+      "returns_absorbed_at_store": "84745.13",
+      "online_returns_absorbed": "11664.47"
+    },
+    {
+      "StoreID": "ST006",
+      "StoreName": "Yuktikara Bend Outlet",
+      "RegionName": "Pacific Northwest",
+      "subtotal_sales_statuses": "616594.58",
+      "returns_absorbed_at_store": "72064.45",
+      "online_returns_absorbed": "29172.44"
+    },
+    {
+      "StoreID": "ST015",
+      "StoreName": "Yuktikara Park City Outlet",
+      "RegionName": "Great Basin",
+      "subtotal_sales_statuses": "614777.35",
+      "returns_absorbed_at_store": "53784.33",
+      "online_returns_absorbed": "9828.91"
+    },
+    {
+      "StoreID": "ST014",
+      "StoreName": "Yuktikara Salt Lake City",
+      "RegionName": "Great Basin",
+      "subtotal_sales_statuses": "470426.42",
+      "returns_absorbed_at_store": "46612.07",
+      "online_returns_absorbed": "8736.45"
+    },
+    {
+      "StoreID": "ST018",
+      "StoreName": "Yuktikara Flagstaff",
+      "RegionName": "Great Basin",
+      "subtotal_sales_statuses": "468835.80",
+      "returns_absorbed_at_store": "49030.04",
+      "online_returns_absorbed": "14045.98"
+    },
+    {
+      "StoreID": "ST010",
+      "StoreName": "Yuktikara Bozeman",
+      "RegionName": "Northern Rockies",
+      "subtotal_sales_statuses": "464915.04",
+      "returns_absorbed_at_store": "43522.68",
+      "online_returns_absorbed": "11218.08"
+    },
+    {
+      "StoreID": "ST007",
+      "StoreName": "Yuktikara Boise",
+      "RegionName": "Northern Rockies",
+      "subtotal_sales_statuses": "461735.19",
+      "returns_absorbed_at_store": "43887.44",
+      "online_returns_absorbed": "11422.52"
+    },
+    {
+      "StoreID": "ST013",
+      "StoreName": "Yuktikara Fort Collins",
+      "RegionName": "Colorado Front Range",
+      "subtotal_sales_statuses": "458805.44",
+      "returns_absorbed_at_store": "46821.54",
+      "online_returns_absorbed": "11024.31"
+    },
+    {
+      "StoreID": "ST003",
+      "StoreName": "Yuktikara Spokane",
+      "RegionName": "Pacific Northwest",
+      "subtotal_sales_statuses": "458720.83",
+      "returns_absorbed_at_store": "46715.88",
+      "online_returns_absorbed": "12547.70"
+    },
+    {
+      "StoreID": "ST012",
+      "StoreName": "Yuktikara Boulder",
+      "RegionName": "Colorado Front Range",
+      "subtotal_sales_statuses": "458292.41",
+      "returns_absorbed_at_store": "48388.67",
+      "online_returns_absorbed": "14240.11"
+    },
+    {
+      "StoreID": "ST016",
+      "StoreName": "Yuktikara Reno",
+      "RegionName": "Great Basin",
+      "subtotal_sales_statuses": "456507.46",
+      "returns_absorbed_at_store": "43043.66",
+      "online_returns_absorbed": "11057.54"
+    },
+    {
+      "StoreID": "ST017",
+      "StoreName": "Yuktikara Sacramento",
+      "RegionName": "Great Basin",
+      "subtotal_sales_statuses": "452889.24",
+      "returns_absorbed_at_store": "48454.49",
+      "online_returns_absorbed": "12271.39"
+    },
+    {
+      "StoreID": "ST005",
+      "StoreName": "Yuktikara Eugene",
+      "RegionName": "Pacific Northwest",
+      "subtotal_sales_statuses": "441355.36",
+      "returns_absorbed_at_store": "47402.72",
+      "online_returns_absorbed": "12384.74"
+    },
+    {
+      "StoreID": "ST008",
+      "StoreName": "Yuktikara Coeur d'Alene",
+      "RegionName": "Northern Rockies",
+      "subtotal_sales_statuses": "437543.37",
+      "returns_absorbed_at_store": "45392.39",
+      "online_returns_absorbed": "11214.06"
+    },
+    {
+      "StoreID": "ST002",
+      "StoreName": "Yuktikara Tacoma",
+      "RegionName": "Pacific Northwest",
+      "subtotal_sales_statuses": "430192.20",
+      "returns_absorbed_at_store": "43322.70",
+      "online_returns_absorbed": "11702.38"
+    },
+    {
+      "StoreID": "ST009",
+      "StoreName": "Yuktikara Missoula",
+      "RegionName": "Northern Rockies",
+      "subtotal_sales_statuses": "429321.84",
+      "returns_absorbed_at_store": "43952.31",
+      "online_returns_absorbed": "9913.65"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+ReturnReasonID,ReturnReasonName,ReturnCategory
+RR1,Too small,Fit
+RR2,Too large,Fit
+RR3,Not as described,Description
+RR4,Damaged or faulty,Quality
+RR5,Wrong item shipped,Logistics
+RR6,Arrived too late,Logistics
+RR7,Changed mind,Customer
+RR8,Found a better price,Customer

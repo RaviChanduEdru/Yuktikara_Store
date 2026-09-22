@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.Python
+*.egg-info/
+
+# Environment and per-machine configuration
+.env
+.env.*
+*.local
+.vscode/
+.idea/
+
+# Fabric / Power BI working files
+*.pbix.bak
+*.SemanticModel/.pbi/localSettings.json
+.pbi/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

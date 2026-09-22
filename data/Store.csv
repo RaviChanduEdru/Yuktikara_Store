@@ -1,0 +1,20 @@
+StoreID,StoreName,RegionName,City,StateCode,Latitude,Longitude,StoreFormat,SquareFeet,OpenedDate
+ST001,Yuktikara Seattle Flagship,Pacific Northwest,Seattle,WA,47.6062,-122.3321,Flagship,24500,2019-03-14
+ST002,Yuktikara Tacoma,Pacific Northwest,Tacoma,WA,47.2529,-122.4443,Standard,11200,2020-09-08
+ST003,Yuktikara Spokane,Pacific Northwest,Spokane,WA,47.6588,-117.426,Standard,10800,2021-05-20
+ST004,Yuktikara Portland Pearl,Pacific Northwest,Portland,OR,45.5152,-122.6784,Flagship,22100,2018-10-02
+ST005,Yuktikara Eugene,Pacific Northwest,Eugene,OR,44.0521,-123.0868,Standard,9600,2022-04-11
+ST006,Yuktikara Bend Outlet,Pacific Northwest,Bend,OR,44.0582,-121.3153,Outlet,14300,2021-11-05
+ST007,Yuktikara Boise,Northern Rockies,Boise,ID,43.615,-116.2023,Standard,12400,2020-06-19
+ST008,Yuktikara Coeur d'Alene,Northern Rockies,Coeur d'Alene,ID,47.6777,-116.7805,Standard,8900,2023-03-24
+ST009,Yuktikara Missoula,Northern Rockies,Missoula,MT,46.8721,-113.994,Standard,9200,2022-08-12
+ST010,Yuktikara Bozeman,Northern Rockies,Bozeman,MT,45.677,-111.0429,Standard,10100,2021-07-30
+ST011,Yuktikara Denver LoDo,Colorado Front Range,Denver,CO,39.7392,-104.9903,Flagship,23800,2019-08-16
+ST012,Yuktikara Boulder,Colorado Front Range,Boulder,CO,40.015,-105.2705,Standard,11700,2020-02-28
+ST013,Yuktikara Fort Collins,Colorado Front Range,Fort Collins,CO,40.5853,-105.0844,Standard,9800,2023-09-15
+ST014,Yuktikara Salt Lake City,Great Basin,Salt Lake City,UT,40.7608,-111.891,Standard,13100,2020-11-06
+ST015,Yuktikara Park City Outlet,Great Basin,Park City,UT,40.6461,-111.498,Outlet,13600,2022-12-09
+ST016,Yuktikara Reno,Great Basin,Reno,NV,39.5296,-119.8138,Standard,10400,2021-02-26
+ST017,Yuktikara Sacramento,Great Basin,Sacramento,CA,38.5816,-121.4944,Standard,12900,2022-06-03
+ST018,Yuktikara Flagstaff,Great Basin,Flagstaff,AZ,35.1983,-111.6513,Standard,8700,2023-05-19
+ST900,Yuktikara Online,Online,Seattle,WA,47.6062,-122.3321,Ecommerce,0,2017-04-01

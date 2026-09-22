@@ -1,0 +1,8 @@
+SupplierID,SupplierName,Country,LeadTimeDays,QualityRating
+SUP01,Kestrel Technical Works,Vietnam,42,4.6
+SUP02,Northaven Textiles,Portugal,28,4.8
+SUP03,Granite Peak Manufacturing,United States,16,4.7
+SUP04,Halden Footwear Group,Vietnam,55,3.4
+SUP05,Selkirk Down Company,Canada,34,4.5
+SUP06,Talus Hardgoods,China,48,4.1
+SUP07,Juniper Mills,India,39,4.3

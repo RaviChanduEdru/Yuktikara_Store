@@ -1,0 +1,8 @@
+# Keep line endings stable across platforms so the SHA-256 hashes in
+# data/manifest.json stay valid for everyone who clones or regenerates.
+* text=auto eol=lf
+
+*.csv  text eol=lf
+*.json text eol=lf
+*.py   text eol=lf
+*.md   text eol=lf

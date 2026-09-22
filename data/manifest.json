@@ -1,0 +1,66 @@
+{
+  "company": "Yuktikara Store",
+  "seed": 20260922,
+  "period": {
+    "start": "2025-01-01",
+    "end": "2026-08-31"
+  },
+  "tax_rate": 0.0825,
+  "tables": {
+    "Store.csv": {
+      "rows": 19,
+      "bytes": 1970,
+      "sha256": "9f79ebde5d7d054ec14b10084990fe3e2dba802d87cafc000e086283de312c36"
+    },
+    "Supplier.csv": {
+      "rows": 7,
+      "bytes": 359,
+      "sha256": "b94447e101c3030d18f17538634eaf380ac21ce1f562412d5741f1a1932357e4"
+    },
+    "Product.csv": {
+      "rows": 52,
+      "bytes": 5466,
+      "sha256": "53761dcc8a9d989bba031a35ff406891dc0a4a469efedb133d9b39620b6a8fae"
+    },
+    "ProductVariant.csv": {
+      "rows": 744,
+      "bytes": 33373,
+      "sha256": "478fcaa90bd8eeece87c46ebc903c4352cdd3ea5032bdf171e8f442fd374943b"
+    },
+    "Customer.csv": {
+      "rows": 6200,
+      "bytes": 364275,
+      "sha256": "84f8f04fb9c28e7e9aea1d10ccaf267f8f55dd835f70124704428968107ef8d2"
+    },
+    "DimDate.csv": {
+      "rows": 608,
+      "bytes": 42529,
+      "sha256": "3467628161e4ac78ec04705fa55ef2e51f07db35a181e5d73bd96894ee07d3fc"
+    },
+    "SalesOrder.csv": {
+      "rows": 33757,
+      "bytes": 3733207,
+      "sha256": "a6a11e62518f5504d1f30f3be548a6f06de9ac6b503ccbd1af3bd1624f22d60a"
+    },
+    "SalesOrderLine.csv": {
+      "rows": 69198,
+      "bytes": 3167965,
+      "sha256": "708854c6968b54f1a99e69eb671fe02281c23c3fe9f8326cdab661998e614f48"
+    },
+    "SalesReturn.csv": {
+      "rows": 6749,
+      "bytes": 526379,
+      "sha256": "31f50f0b736b87dc911c9d2295957a7d6ef88f5e4e5d85d65b02297c4e128a93"
+    },
+    "ReturnReason.csv": {
+      "rows": 8,
+      "bytes": 279,
+      "sha256": "5c155b7eae88eb933d6c64853bd9625455101a11e922e984a2eae2bbb33d497a"
+    },
+    "StoreInventory.csv": {
+      "rows": 7025,
+      "bytes": 295364,
+      "sha256": "806787dcc136d4e6cc1096cf37c84032045d95aa5c514039c7083f592a46c457"
+    }
+  }
+}
