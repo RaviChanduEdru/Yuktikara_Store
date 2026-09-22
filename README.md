@@ -179,8 +179,8 @@ its lakehouse:
 
 ```
 data/      the committed snapshot, ready to upload to Fabric, plus ground truth and hashes
-scripts/   the generator, the oracle, the ontology design checker and the notebook builder
-fabric/    the notebook that refreshes the data to current dates
+scripts/   the generator, the oracle and the ontology design checker
+fabric/    the notebook that loads the data into Fabric as typed tables
 docs/      the company, data model, architecture, workspace setup, ontology bindings and the rehearsal log template
 ```
 
