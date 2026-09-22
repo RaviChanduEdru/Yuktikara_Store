@@ -1,8 +1,9 @@
 # Data model
 
-Eleven tables. The committed snapshot in `data/` covers 2025-01-01 to 2026-08-31, and the row counts below
-describe it. A run of `fabric/refresh_yuktikara_data.ipynb` covers 1 January of the previous year to its end
-date, so its counts are larger or smaller; the schema is identical. Every file is UTF-8 CSV with a header
+Seventeen tables across six business areas: selling, returns, products, customers, buying and
+stock. The committed snapshot in `data/` covers 2025-01-01 to 2026-08-31, and the row counts below
+describe it. A regenerated dataset covers 1 January of the previous year to the end date you pass, so its counts
+are larger or smaller; the schema is identical. Every file is UTF-8 CSV with a header
 row and LF line endings. Money is written with two decimal places and no thousands separator or currency
 symbol.
 
@@ -173,23 +174,131 @@ Of the 6,749 returns, 5,724 are `Accepted`, totalling 970,051.76.
 | `ReturnReasonName` | string | `Too small`, `Too large`, `Not as described`, `Damaged or faulty`, `Wrong item shipped`, `Arrived too late`, `Changed mind`, `Found a better price` |
 | `ReturnCategory` | string | `Fit`, `Description`, `Quality`, `Logistics`, `Customer` |
 
-## StoreInventory.csv — 7,025 rows
+## StoreInventory.csv — 11,773 rows
 
-A single snapshot dated 2026-08-31, covering RFID-tagged variants only. This is the batch counterpart to
-the live RFID stream: `FloorMinQty` is the threshold the operations agent watches.
+What the stock count found on the last day of the window, for every store and variant the store carries.
+This is the batch counterpart to the live RFID stream: `FloorMinQty` is the threshold the operations agent
+watches, and 10.6% of positions are below it. A position exists where the store has sold that variant, plus
+some ranged but slow-moving lines. `InventoryBalance` holds the months behind this count.
 
 | Column | Type | Notes |
 |---|---|---|
 | `InventoryID` | string | Primary key, `<StoreID>-<VariantID>`, for example `ST001-V00002` |
-| `StoreID` | string | Physical stores only |
+| `StoreID` | string | Physical stores only; the online store's stock isn't counted |
 | `VariantID` | string | Foreign key to `ProductVariant` |
 | `ProductID` | string | Denormalised |
-| `SnapshotDate` | date | `2026-08-31` for every row |
+| `SnapshotDate` | date | The window's last day, `2026-08-31` in the committed snapshot |
 | `FloorQty` | integer | On the shop floor |
 | `BackroomQty` | integer | In the stockroom |
 | `OnHandQty` | integer | `FloorQty + BackroomQty` |
-| `FloorMinQty` | integer | Below this, the floor needs replenishing from the backroom |
+| `FloorMinQty` | integer | Below this, the floor needs replenishing from the backroom. Set from how fast the variant sells at that store |
 | `ReorderPoint` | integer | Below this, the store reorders |
+
+---
+
+## InventoryBalance.csv — 235,460 rows
+
+One row per store, variant and month: the stock ledger behind the snapshot. It balances exactly, which is
+the point of it: `OpeningQty + ReceivedQty - SoldQty + ReturnedQty + AdjustedQty = ClosingQty`, each month
+opens where the last one closed, and the last month closes on `StoreInventory.OnHandQty`. Receipts match
+the delivered purchase order lines, and sales match the order lines for that store.
+
+| Column | Type | Notes |
+|---|---|---|
+| `BalanceID` | string | Primary key, `<StoreID>-<VariantID>-<YYYYMM>` |
+| `StoreID` | string | Foreign key to `Store` |
+| `VariantID` | string | Foreign key to `ProductVariant` |
+| `ProductID` | string | Denormalised |
+| `BalanceMonth` | date | First day of the month |
+| `OpeningQty` | integer | On hand at the start |
+| `ReceivedQty` | integer | Delivered by suppliers that month |
+| `SoldQty` | integer | Sold at that store on Completed and Shipped orders |
+| `ReturnedQty` | integer | Accepted returns put back on sale there |
+| `AdjustedQty` | integer | Stock counts: losses are negative, stock sent from another store is positive |
+| `ClosingQty` | integer | On hand at the end |
+| `DaysOutOfStock` | integer | Days the position ended with nothing |
+| `DaysBelowShelfMin` | integer | Days it ended below `FloorMinQty` |
+
+Stock never prevented a sale: the sales came first and the stock was built to support them. So the ledger
+answers "was it available?", never "what did we lose by running out?".
+
+---
+
+## PurchaseOrder.csv — 6,108 rows
+
+What each store ordered from each supplier. Stores reorder every two weeks, and a supplier's promised lead
+time is in `Supplier.LeadTimeDays`. Orders still in transit at the end of the window have no delivery date.
+
+| Column | Type | Notes |
+|---|---|---|
+| `PurchaseOrderID` | string | Primary key, `PO000001` |
+| `SupplierID` | string | Foreign key to `Supplier` |
+| `StoreID` | string | Where it's being delivered |
+| `PurchaseOrderDate` | date | When it was placed; may fall before the window for early deliveries |
+| `ExpectedDeliveryDate` | date | Order date plus the supplier's promised lead time |
+| `DeliveredDate` | date | When it actually arrived; empty while still open |
+| `POStatus` | string | `Received`, `Partially received` or `Open` |
+| `POTotalCost` | double | Cost of what was ordered |
+
+---
+
+## PurchaseOrderLine.csv — 81,170 rows
+
+One row per variant on a purchase order. A short delivery has `QuantityReceived` below `QuantityOrdered`.
+
+| Column | Type | Notes |
+|---|---|---|
+| `PurchaseOrderLineID` | string | Primary key, `<PurchaseOrderID>-<line number>` |
+| `PurchaseOrderID` | string | Foreign key to `PurchaseOrder` |
+| `VariantID` | string | Foreign key to `ProductVariant` |
+| `ProductID` | string | Denormalised |
+| `QuantityOrdered` | integer | Units ordered |
+| `QuantityReceived` | integer | Units that arrived; 0 while open |
+| `POUnitCost` | double | Cost per unit, which rises for some suppliers in the current year |
+| `POLineCost` | double | `QuantityOrdered × POUnitCost` |
+
+---
+
+## Promotion.csv — 8 rows
+
+The campaigns behind the discounts: clearance after the holidays and at the end of summer, and seasonal
+events in between.
+
+| Column | Type | Notes |
+|---|---|---|
+| `PromotionID` | string | Primary key, `PR2025-1` |
+| `PromotionName` | string | For example `Summer Clearance 2026` |
+| `PromotionType` | string | `Clearance` or `Seasonal event` |
+| `PromotionStartDate` | date | First day |
+| `PromotionEndDate` | date | Last day; may fall after the window for a campaign still running |
+| `DiscountDepth` | string | How deep the campaign goes, for example `15-40% off` |
+
+---
+
+## OrderLinePromotion.csv — 16,501 rows
+
+Which campaign each discounted sale line was sold under. Only lines with a discount appear. It's the
+mapping table behind the ontology's `lineOnPromotion` relationship, and it gets no entity type of its own.
+
+| Column | Type | Notes |
+|---|---|---|
+| `OrderLineID` | string | Foreign key to `SalesOrderLine` |
+| `PromotionID` | string | Foreign key to `Promotion` |
+
+---
+
+## SalesTarget.csv — 456 rows
+
+The monthly net sales target for each store, for the window and the rest of the current year. Targets follow
+each store's trading pattern, calibrated to the rate the chain actually trades at. The stores that opened in
+2023 and the online store were given growth plans, so they run behind while the flagships run ahead.
+
+| Column | Type | Notes |
+|---|---|---|
+| `TargetID` | string | Primary key, `<StoreID>-<YYYYMM>` |
+| `StoreID` | string | Foreign key to `Store` |
+| `TargetMonth` | date | First day of the month |
+| `TargetNetSales` | double | The target, to the nearest thousand |
 
 ---
 
@@ -209,6 +318,11 @@ SalesOrder 1─* SalesOrderLine *─1 ProductVariant *─1 Product *─1 Supplie
 SalesOrderLine 1─* SalesReturn *─1 ReturnReason
 SalesReturn *─1 Store            (via ReturnStoreID — the store that absorbed it)
 Store 1─* StoreInventory *─1 ProductVariant
+Store 1─* InventoryBalance *─1 ProductVariant
+Store 1─* SalesTarget
+Supplier 1─* PurchaseOrder *─1 Store
+PurchaseOrder 1─* PurchaseOrderLine *─1 ProductVariant
+SalesOrderLine *─1 Promotion      (via OrderLinePromotion, discounted lines only)
 DimDate 1─* SalesOrder           (OrderDate)
 DimDate 1─* SalesReturn          (ReturnDate)
 ```
@@ -217,6 +331,6 @@ DimDate 1─* SalesReturn          (ReturnDate)
 makes "which store absorbs the most online returns" answerable, and it is the kind of question that is
 awkward against raw tables and natural against an ontology.
 
-In the ontology these become 13 named relationship types, and `Product` becomes the entity type
+In the ontology these become 22 named relationship types, and `Product` becomes the entity type
 `ProductStyle` because `PRODUCT` is a GQL reserved word. The full binding, with every property name, is in
 [ontology-bindings.md](ontology-bindings.md).

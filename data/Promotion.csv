@@ -1,0 +1,9 @@
+PromotionID,PromotionName,PromotionType,PromotionStartDate,PromotionEndDate,DiscountDepth
+PR2025-1,Winter Clearance 2025,Clearance,2025-01-01,2025-02-28,15-40% off
+PR2025-2,Spring Trail Days 2025,Seasonal event,2025-03-01,2025-06-30,10-20% off selected lines
+PR2025-3,Summer Clearance 2025,Clearance,2025-07-01,2025-08-31,15-40% off
+PR2025-4,Autumn Layers Event 2025,Seasonal event,2025-09-01,2025-10-31,10-20% off selected lines
+PR2025-5,Holiday Gift Event 2025,Seasonal event,2025-11-01,2025-12-31,10-20% off selected lines
+PR2026-1,Winter Clearance 2026,Clearance,2026-01-01,2026-02-28,15-40% off
+PR2026-2,Spring Trail Days 2026,Seasonal event,2026-03-01,2026-06-30,10-20% off selected lines
+PR2026-3,Summer Clearance 2026,Clearance,2026-07-01,2026-08-31,15-40% off

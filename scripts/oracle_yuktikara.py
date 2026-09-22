@@ -11,6 +11,7 @@ import argparse
 import csv
 import json
 from collections import defaultdict
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -45,6 +46,14 @@ def main() -> int:
     variants = {v["VariantID"]: v for v in read(data / "ProductVariant.csv")}
     stores = {s["StoreID"]: s for s in read(data / "Store.csv")}
     reasons = {r["ReturnReasonID"]: r for r in read(data / "ReturnReason.csv")}
+    suppliers = {s["SupplierID"]: s for s in read(data / "Supplier.csv")}
+    purchase_orders = read(data / "PurchaseOrder.csv")
+    purchase_order_lines = read(data / "PurchaseOrderLine.csv")
+    inventory = read(data / "StoreInventory.csv")
+    balances = read(data / "InventoryBalance.csv")
+    promotions = read(data / "Promotion.csv")
+    line_promotions = read(data / "OrderLinePromotion.csv")
+    targets = read(data / "SalesTarget.csv")
 
     order_by_id = {o["OrderID"]: o for o in orders}
     sales_orders = {o["OrderID"] for o in orders if o["OrderStatus"] in SALES_STATUSES}
@@ -67,6 +76,9 @@ def main() -> int:
     gross_by_period: dict[str, dict[str, Decimal]] = {"year": defaultdict(lambda: ZERO),
                                                       "quarter": defaultdict(lambda: ZERO),
                                                       "month": defaultdict(lambda: ZERO)}
+    ordertotal_by_period: dict[str, dict[str, Decimal]] = {"year": defaultdict(lambda: ZERO),
+                                                           "quarter": defaultdict(lambda: ZERO),
+                                                           "month": defaultdict(lambda: ZERO)}
 
     for o in orders:
         day = o["OrderDate"]
@@ -75,6 +87,7 @@ def main() -> int:
             gross_by_period[grain][key] += dec(o["GrossAmount"])
             if o["OrderID"] in sales_orders:
                 subtotal_by_period[grain][key] += dec(o["SubTotal"])
+                ordertotal_by_period[grain][key] += dec(o["OrderTotal"])
 
     for r in accepted:
         day = r["ReturnDate"]
@@ -90,6 +103,7 @@ def main() -> int:
             returned = returns_by_period[grain][key]
             out[key] = {
                 "gross_all_statuses": f"{gross_by_period[grain][key]:.2f}",
+                "ordertotal_sales_statuses_includes_tax": f"{ordertotal_by_period[grain][key]:.2f}",
                 "subtotal_sales_statuses": f"{subtotal:.2f}",
                 "accepted_returns": f"{returned:.2f}",
                 "net_sales": f"{subtotal - returned:.2f}",
@@ -223,6 +237,160 @@ def main() -> int:
         for dept in sorted(dept_subtotal, key=lambda d: dept_subtotal[d] - dept_returns[d], reverse=True)
     }
 
+    # --- Buying and deliveries ------------------------------------------------------------------
+    po_by_id = {p["PurchaseOrderID"]: p for p in purchase_orders}
+    supplier_stats: dict[str, dict] = defaultdict(
+        lambda: {"delivered": 0, "on_time": 0, "days_late": 0, "open": 0,
+                 "ordered_units": 0, "received_units": 0, "spend": ZERO})
+    for po in purchase_orders:
+        stat = supplier_stats[po["SupplierID"]]
+        if not po["DeliveredDate"]:
+            stat["open"] += 1
+            continue
+        stat["delivered"] += 1
+        late = (date.fromisoformat(po["DeliveredDate"]) - date.fromisoformat(po["ExpectedDeliveryDate"])).days
+        if late <= 0:
+            stat["on_time"] += 1
+        else:
+            stat["days_late"] += late
+    open_units = 0
+    open_value = ZERO
+    for line in purchase_order_lines:
+        po = po_by_id[line["PurchaseOrderID"]]
+        stat = supplier_stats[po["SupplierID"]]
+        if po["DeliveredDate"]:
+            stat["ordered_units"] += int(line["QuantityOrdered"])
+            stat["received_units"] += int(line["QuantityReceived"])
+            stat["spend"] += dec(line["POUnitCost"]) * int(line["QuantityReceived"])
+        else:
+            open_units += int(line["QuantityOrdered"])
+            open_value += dec(line["POLineCost"])
+    supplier_performance = {}
+    for supplier_id, stat in sorted(supplier_stats.items()):
+        delivered = stat["delivered"]
+        late_count = delivered - stat["on_time"]
+        supplier_performance[suppliers[supplier_id]["SupplierName"]] = {
+            "SupplierID": supplier_id,
+            "promised_lead_time_days": int(suppliers[supplier_id]["LeadTimeDays"]),
+            "quality_rating": suppliers[supplier_id]["QualityRating"],
+            "deliveries": delivered,
+            "on_time_pct": f"{stat['on_time'] / delivered * 100:.2f}" if delivered else "0.00",
+            "avg_days_late_when_late": f"{stat['days_late'] / late_count:.2f}" if late_count else "0.00",
+            "fill_rate_pct": f"{stat['received_units'] / stat['ordered_units'] * 100:.2f}" if stat["ordered_units"] else "0.00",
+            "units_received": stat["received_units"],
+            "spend": f"{stat['spend']:.2f}",
+            "open_orders": stat["open"],
+        }
+
+    # --- Stock over time, and the checks that it reconciles ---------------------------------------
+    snapshot_by_position = {(i["StoreID"], i["VariantID"]): i for i in inventory}
+    last_month = max(b["BalanceMonth"] for b in balances)
+    ledger_receipts: dict[tuple, int] = defaultdict(int)
+    ledger_sold: dict[tuple, int] = defaultdict(int)
+    for row in balances:
+        key = (row["StoreID"], row["VariantID"], row["BalanceMonth"][:7])
+        ledger_receipts[key] += int(row["ReceivedQty"])
+        ledger_sold[key] += int(row["SoldQty"])
+        assert (int(row["OpeningQty"]) + int(row["ReceivedQty"]) - int(row["SoldQty"]) + int(row["ReturnedQty"])
+                + int(row["AdjustedQty"]) == int(row["ClosingQty"])), f"ledger does not balance: {row['BalanceID']}"
+        if row["BalanceMonth"] == last_month:
+            assert int(row["ClosingQty"]) == int(snapshot_by_position[(row["StoreID"], row["VariantID"])]["OnHandQty"]), \
+                f"ledger does not close on the snapshot: {row['BalanceID']}"
+    delivered_units: dict[tuple, int] = defaultdict(int)
+    for line in purchase_order_lines:
+        po = po_by_id[line["PurchaseOrderID"]]
+        if po["DeliveredDate"]:
+            delivered_units[(po["StoreID"], line["VariantID"], po["DeliveredDate"][:7])] += int(line["QuantityReceived"])
+    for key, units in ledger_receipts.items():
+        assert units == delivered_units.get(key, 0), f"ledger receipts do not match deliveries: {key}"
+    sold_units: dict[tuple, int] = defaultdict(int)
+    for line in lines:
+        order = order_by_id[line["OrderID"]]
+        if order["OrderID"] in sales_orders:
+            sold_units[(order["StoreID"], line["VariantID"], order["OrderDate"][:7])] += int(line["Quantity"])
+    for key, units in ledger_sold.items():
+        assert units == sold_units.get(key, 0), f"ledger sales do not match orders: {key}"
+
+    stock_by_supplier: dict[str, dict] = defaultdict(lambda: {"days_out": 0, "days_below": 0, "position_months": 0})
+    stockout_by_style: dict[str, int] = defaultdict(int)
+    for row in balances:
+        supplier_id = products[row["ProductID"]]["SupplierID"]
+        stat = stock_by_supplier[supplier_id]
+        stat["days_out"] += int(row["DaysOutOfStock"])
+        stat["days_below"] += int(row["DaysBelowShelfMin"])
+        stat["position_months"] += 1
+        stockout_by_style[products[row["ProductID"]]["ProductName"]] += int(row["DaysOutOfStock"])
+    availability = {
+        suppliers[supplier_id]["SupplierName"]: {
+            "SupplierID": supplier_id,
+            "stockout_days_per_position_month": f"{stat['days_out'] / stat['position_months']:.3f}",
+            "below_shelf_min_days_per_position_month": f"{stat['days_below'] / stat['position_months']:.3f}",
+            "position_months": stat["position_months"],
+        }
+        for supplier_id, stat in sorted(stock_by_supplier.items(),
+                                        key=lambda kv: -kv[1]["days_out"] / kv[1]["position_months"])
+    }
+    below_min = [i for i in inventory if int(i["FloorQty"]) < int(i["FloorMinQty"])]
+    shelf_state = {
+        "positions": len(inventory),
+        "below_shelf_minimum": len(below_min),
+        "below_shelf_minimum_pct": f"{len(below_min) / len(inventory) * 100:.2f}",
+        "empty_shelves": sum(1 for i in inventory if int(i["FloorQty"]) == 0),
+        "units_on_hand": sum(int(i["OnHandQty"]) for i in inventory),
+        "units_on_the_floor": sum(int(i["FloorQty"]) for i in inventory),
+    }
+
+    # --- Promotions --------------------------------------------------------------------------------
+    promo_by_line = {link["OrderLineID"]: link["PromotionID"] for link in line_promotions}
+    promo_stats: dict[str, dict] = defaultdict(lambda: {"lines": 0, "units": 0, "markdown": ZERO, "net": ZERO})
+    for line in lines:
+        promo_id = promo_by_line.get(line["OrderLineID"])
+        if promo_id is None or line["OrderID"] not in sales_orders:
+            continue
+        stat = promo_stats[promo_id]
+        stat["lines"] += 1
+        stat["units"] += int(line["Quantity"])
+        stat["markdown"] += dec(line["DiscountAmount"])
+        stat["net"] += dec(line["LineTotal"])
+    promotion_results = {
+        promo["PromotionName"]: {
+            "PromotionID": promo["PromotionID"],
+            "type": promo["PromotionType"],
+            "runs": f"{promo['PromotionStartDate']} to {promo['PromotionEndDate']}",
+            "lines": promo_stats[promo["PromotionID"]]["lines"],
+            "units": promo_stats[promo["PromotionID"]]["units"],
+            "markdown": f"{promo_stats[promo['PromotionID']]['markdown']:.2f}",
+            "sales_after_markdown": f"{promo_stats[promo['PromotionID']]['net']:.2f}",
+        }
+        for promo in promotions
+    }
+
+    # --- Plans against actuals ---------------------------------------------------------------------
+    # A store's net sales: what it sold, less the returns of what it sold, on the day they were accepted.
+    store_month_net: dict[tuple, Decimal] = defaultdict(lambda: ZERO)
+    for order in orders:
+        if order["OrderID"] in sales_orders:
+            store_month_net[(order["StoreID"], order["OrderDate"][:7])] += dec(order["SubTotal"])
+    for r in accepted:
+        seller = order_by_id[r["OrderID"]]["StoreID"]
+        store_month_net[(seller, r["ReturnDate"][:7])] -= dec(r["ReturnAmount"])
+    target_by_store_month = {(t["StoreID"], t["TargetMonth"][:7]): dec(t["TargetNetSales"]) for t in targets}
+    months_with_sales = sorted({m for (_, m) in store_month_net})
+    plan_months = [m for m in months_with_sales if m < months_with_sales[-1]]  # skip the part month at the end
+    against_plan = []
+    for store_id, store in sorted(stores.items()):
+        target = sum(target_by_store_month.get((store_id, m), ZERO) for m in plan_months)
+        actual = sum(store_month_net.get((store_id, m), ZERO) for m in plan_months)
+        against_plan.append({
+            "StoreID": store_id,
+            "StoreName": store["StoreName"],
+            "opened": store["OpenedDate"],
+            "target": f"{target:.2f}",
+            "net_sales": f"{actual:.2f}",
+            "pct_of_target": f"{actual / target * 100:.2f}" if target else "0.00",
+        })
+    against_plan.sort(key=lambda row: float(row["pct_of_target"]))
+
     oracle = {
         "company": "Yuktikara Store",
         "definition": (
@@ -266,6 +434,14 @@ def main() -> int:
         "net_sales_by_channel": channel,
         "net_sales_by_department": department,
         "stores": store_rows,
+        "supplier_performance": supplier_performance,
+        "open_purchase_orders": {"orders": sum(v["open_orders"] for v in supplier_performance.values()),
+                                 "units": open_units, "value": f"{open_value:.2f}"},
+        "stock_availability_by_supplier": availability,
+        "shelf_state_at_snapshot": shelf_state,
+        "stockout_days_top_styles": dict(sorted(stockout_by_style.items(), key=lambda kv: -kv[1])[:10]),
+        "promotions": promotion_results,
+        "net_sales_against_plan": {"months": f"{plan_months[0]} to {plan_months[-1]}", "stores": against_plan},
     }
 
     out = data / "expected_answers.json"
@@ -288,6 +464,18 @@ def main() -> int:
     print("  by department:")
     for dept, row in oracle["return_rate_by_department"].items():
         print(f"    {dept:<12} {row['return_rate_pct']:>6}%")
+    print()
+    print("  suppliers:")
+    for name, row in oracle["supplier_performance"].items():
+        print(f"    {name:<28}{row['on_time_pct']:>7}% on time {row['fill_rate_pct']:>7}% filled "
+              f"{row['open_orders']:>4} open")
+    print()
+    print(f"  shelves below their minimum  {shelf_state['below_shelf_minimum']:>7,} of {shelf_state['positions']:,}"
+          f" ({shelf_state['below_shelf_minimum_pct']}%)")
+    behind = [row for row in against_plan if float(row["pct_of_target"]) < 100]
+    print(f"  stores behind plan           {len(behind):>7} of {len(against_plan)}"
+          f"  (lowest {against_plan[0]['StoreName']}, {against_plan[0]['pct_of_target']}%)")
+    print("  the stock ledger, deliveries and sales reconcile")
     return 0
 
 

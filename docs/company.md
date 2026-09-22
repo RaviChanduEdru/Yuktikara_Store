@@ -23,7 +23,9 @@ notebook moves the calendar window, but the business keeps the same shape.
 | Customers | 6,200; 62% belong to the three-tier loyalty programme |
 | Suppliers | 7 manufacturers in six countries |
 | Stock tracking | RFID tags on every footwear and apparel item, counted on the shop floor and in the stockroom |
+| Buying | Every store reorders from each supplier every two weeks; suppliers take 16 to 55 days to deliver |
 | Scale (*snapshot*) | 33,757 orders, 69,198 order lines, 6,749 returns; net sales 11,060,075.41 |
+| Also in the data (*snapshot*) | 6,108 purchase orders, 11,773 stock positions with 20 months of stock history, 8 promotions, monthly targets per store |
 
 ## How it grew
 
@@ -168,18 +170,79 @@ and in the **stockroom**. Each variant also has two thresholds:
   the stockroom.
 - **Reorder point:** three times the floor minimum; below this, the store needs more stock from a supplier.
 
-At the end of the *snapshot*, 734 of the 7,025 store-variant positions (10.4%) were below their floor
-minimum. Watching for exactly that, as it happens, is the job of the live RFID feed and the operations agent
-later in the series.
+At the end of the *snapshot*, 1,243 of the 11,773 store-variant positions (10.6%) were below their floor
+minimum, and 1,231 shelves were empty with stock still in the stockroom. Watching for exactly that, as it
+happens, is the job of the live RFID feed and the operations agent later in the series.
+
+Stock levels follow how fast each size sells in each store: 45,828 units on hand across the chain, a
+typical position holding a handful. `InventoryBalance` holds the months behind that count, and it balances:
+opening stock, plus deliveries and returns put back on sale, minus what sold, plus or minus stock
+corrections, equals closing stock. The last month closes on exactly the counted snapshot.
+
+## Buying from suppliers
+
+Every store reorders from each supplier every two weeks, and only for the sizes that have fallen to their
+reorder point. The supplier then takes its lead time to deliver: 16 days from Granite Peak in the United
+States, 55 from Halden in Vietnam. `PurchaseOrder` records what was ordered and when it was expected;
+`DeliveredDate` records when it actually turned up, and is empty for the 372 orders still in transit at the
+end of the *snapshot*.
+
+Suppliers differ, and that is the point:
+
+| Supplier | Promised lead time | Delivered on time | Late by, when late | Of units ordered, delivered |
+|---|---:|---:|---:|---:|
+| Granite Peak Manufacturing | 16 days | 95.7% | 2.0 days | 98.8% |
+| Northaven Textiles | 28 days | 92.3% | 3.5 days | 98.6% |
+| Selkirk Down Company | 34 days | 90.7% | 4.2 days | 97.8% |
+| Kestrel Technical Works | 42 days | 86.6% | 5.5 days | 98.2% |
+| Juniper Mills | 39 days | 81.3% | 6.4 days | 96.9% |
+| Talus Hardgoods | 48 days | 76.9% | 8.1 days | 95.8% |
+| **Halden Footwear Group** | **55 days** | **56.0%** | **14.2 days** | **85.5%** |
+
+Halden has the longest lead time, the weakest quality rating, the worst record for turning up on time, and
+the habit of shipping less than was ordered. They also make the Cascade Ridge Hiking Boot. Their positions
+run out of stock more often than anyone else's, and it shows in the stock history rather than in the sales,
+because a shelf that is empty makes no sale to lose.
+
+Costs rise too: Halden's prices went up 4% and Talus's 6% at the start of the current year, which shows in
+`POUnitCost` against the standing `Product.UnitCost`.
+
+## Promotions
+
+Discounts aren't loose: every discounted sale line belongs to a campaign, through `OrderLinePromotion`.
+
+| Campaign | When | Type |
+|---|---|---|
+| Winter Clearance | January to February | Clearance, 15-40% off |
+| Spring Trail Days | March to June | Seasonal event, 10-20% off selected lines |
+| Summer Clearance | July to August | Clearance, 15-40% off |
+| Autumn Layers Event | September to October | Seasonal event |
+| Holiday Gift Event | November to December | Seasonal event |
+
+The two clearances do the heavy lifting: Summer Clearance 2025 alone moved 4,141 units and gave away
+176,625.90 in markdown (*snapshot*).
+
+## Plans and targets
+
+Each store has a net sales target for every month, in `SalesTarget`, set from its trading pattern. The
+stores that opened in 2023 and the online store were given growth plans, and they are the ones behind: over
+the *snapshot*'s complete months, Coeur d'Alene reached 76% of plan and Fort Collins 78%, while Seattle
+Flagship and Portland Pearl passed 108%. Fourteen of the nineteen stores were behind plan.
 
 ## How the business measures itself
 
 | Measure | Definition |
 |---|---|
 | **Net sales** | `SubTotal` of Completed and Shipped orders, minus the `ReturnAmount` of Accepted returns, counted on the return date. Cancelled and Pending orders aren't sales; tax isn't sales |
+| **Net sales by store** | The same, attributed to the store that sold the goods, not the store that took the return back |
+| **Gross margin** | Net sales minus `Product.UnitCost` × units sold |
 | **Return rate** | Accepted returned units ÷ units sold on Completed and Shipped orders, over the same period |
 | **Markdown share** | `DiscountAmount` ÷ `GrossAmount` |
 | **Floor availability** | Share of store-variant positions at or above their floor minimum |
+| **Stockout days** | Days a position ended with nothing, from `InventoryBalance` |
+| **On-time delivery** | Purchase orders delivered on or before `ExpectedDeliveryDate` ÷ orders delivered |
+| **Fill rate** | `QuantityReceived` ÷ `QuantityOrdered` on delivered orders |
+| **Plan attainment** | Net sales by store ÷ `SalesTarget.TargetNetSales`, over the same months |
 
 **Net sales is the number everyone asks for and the one most often answered wrongly.** The data holds at
 least four plausible candidates: gross, order total with tax, subtotal before returns, and true net sales.
@@ -199,6 +262,12 @@ Only the definition above is right. In the *snapshot* the gap between the first 
 | Taking things back | `SalesReturn` | A returned order line |
 | | `ReturnReason` | One of the eight return reasons |
 | Stock on the floor | `StoreInventory` | One variant in one store: floor and stockroom counts |
+| | `InventoryBalance` | One variant in one store for one month: opening, movements, closing |
+| Buying | `PurchaseOrder` | An order to a supplier for one store |
+| | `PurchaseOrderLine` | One variant on that order, ordered and received |
+| Promoting | `Promotion` | A campaign |
+| | `OrderLinePromotion` | The campaign a discounted sale line was sold under |
+| Planning | `SalesTarget` | One store's target for one month |
 | The calendar | `DimDate` | One day |
 
 ```
@@ -224,8 +293,9 @@ It's a teaching dataset, so some real-world complexity is deliberately left out:
 
 - **One sales tax rate (8.25%) everywhere.** Real US sales tax varies by state and city.
 - **Prices never rise.** Each style keeps its list price for the whole period; only markdowns change it.
-- **No staff, purchase orders or shipments.** Supplier deliveries and replenishment orders aren't modelled
-  yet.
+- **No staff.** Who served the customer, and who refills the shelf, isn't modelled yet.
+- **Stock never lost a sale.** The sales came first and the stock history was built to support them, so
+  an empty shelf costs availability in the data, never revenue.
 - **Customers shop anywhere.** Their preferred store doesn't influence where they buy.
 - **Stores never close,** and none opens during the period covered.
 - **One inventory snapshot**, taken on the last day. The live RFID feed arrives in a later episode.

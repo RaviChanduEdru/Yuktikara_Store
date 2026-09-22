@@ -22,7 +22,7 @@ The dataset is designed around a single question that is harder than it looks:
 
 > **What were our sales last quarter?**
 
-## The definition everything hangs on
+## Definitions: the thing a foundation writes down
 
 > **Net sales** is the `SubTotal` of orders whose `OrderStatus` is `Completed` or `Shipped`, minus the
 > `ReturnAmount` of returns whose `ReturnStatus` is `Accepted`, counted on the `ReturnDate`.
@@ -40,10 +40,15 @@ Four defensible-looking numbers sit in the data, and only one is right:
 The gap between the first row and the last is **20.3%**. An agent that cannot see the definition will
 usually land on one of the first three, and will not tell you which one it picked.
 
+Sales is only the most familiar example. The same is true of a return rate, of whether a delivery counts
+as on time, and of what an empty shelf means. The dataset carries the parts of the business each of those
+questions needs, and [docs/company.md](docs/company.md) writes the definitions down once.
+
 ## The dataset
 
-The committed snapshot covers **2025-01-01 to 2026-08-31**: 33,757 orders, 69,198 order lines and 6,749
-returns. Every figure in this README describes that snapshot. To work with current dates instead, see
+The committed snapshot covers **2025-01-01 to 2026-08-31**: 33,757 orders, 69,198 order lines, 6,749
+returns, 6,108 purchase orders and 20 months of stock history. Every figure in this README describes that
+snapshot. To work with current dates instead, see
 [Keeping the dates current](#keeping-the-dates-current).
 
 | File | Rows | What it holds |
@@ -58,14 +63,23 @@ returns. Every figure in this README describes that snapshot. To work with curre
 | `SalesOrderLine.csv` | 69,198 | Line-level quantity, price and discount |
 | `SalesReturn.csv` | 6,749 | Returns, with reason, status and the store that absorbed them |
 | `ReturnReason.csv` | 8 | Reason lookup, grouped into categories |
-| `StoreInventory.csv` | 7,025 | Floor and backroom stock, with the floor minimum per variant |
+| `StoreInventory.csv` | 11,773 | Floor and backroom stock counted on the last day, with the floor minimum per variant |
+| `InventoryBalance.csv` | 235,460 | The stock ledger behind that count: one store, variant and month, and it balances |
+| `PurchaseOrder.csv` | 6,108 | What each store ordered from each supplier, when it was due and when it arrived |
+| `PurchaseOrderLine.csv` | 81,170 | Units ordered and units received, per variant |
+| `Promotion.csv` | 8 | Clearances and seasonal events |
+| `OrderLinePromotion.csv` | 16,501 | The campaign each discounted sale line was sold under |
+| `SalesTarget.csv` | 456 | A monthly net sales target per store |
 
 The business behind the tables: [docs/company.md](docs/company.md). Column-by-column reference:
 [docs/data-model.md](docs/data-model.md). How the Fabric pieces fit together, and the order to build them in:
 [docs/architecture.md](docs/architecture.md). The ontology, entity by entity:
 [docs/ontology-bindings.md](docs/ontology-bindings.md).
 
-Deliberately only eleven tables. Every one of them is a manual upload, so each has to earn its place.
+Seventeen tables, covering the parts of a retailer a question can reach for: selling and returning,
+products and suppliers, buying and delivering, stock over time, promotions, and the plan. Nothing is
+modelled for one question, which is why the same data answers "what were our sales?", "which supplier
+costs us availability?" and "which stores are behind plan?".
 
 ## What is planted in the data
 
@@ -116,9 +130,16 @@ python scripts/oracle_yuktikara.py --data current
 ## Keeping the dates current
 
 A fixed snapshot goes stale: "last month" and "last quarter" drift away from the data as the calendar moves.
-[`fabric/refresh_yuktikara_data.ipynb`](fabric/refresh_yuktikara_data.ipynb) fixes that inside Fabric. Each
-run regenerates the dataset for a window ending yesterday (or any date you set), writes the 11 lakehouse
-tables and verifies them.
+Regenerate it before you build or record, which takes seconds:
+
+```
+python scripts/generate_yuktikara.py --end yesterday
+python scripts/oracle_yuktikara.py
+```
+
+Then upload `data/` to the lakehouse and run
+[`fabric/load_yuktikara_data.ipynb`](fabric/load_yuktikara_data.ipynb), which writes the 17 tables with
+explicit types and verifies them. Fabric runs no code here that isn't loading data.
 
 It regenerates rather than shifting old dates forward. Shifting by an arbitrary number of days would put
 the holiday peak and the clearance markdowns in the wrong months and move weekend trade onto weekdays. A
@@ -133,23 +154,24 @@ To use it:
 
 1. Set up the workspace, its folders and its task flow as in [docs/workspace-setup.md](docs/workspace-setup.md).
 2. Create the lakehouse `yuktikara_lh` with **Lakehouse schemas** checked, and leave OneLake security off.
-3. Upload `scripts/generate_yuktikara.py` and `scripts/oracle_yuktikara.py` to `Files/yuktikara/scripts/`.
+3. Upload this repo's `data/` folder to `Files/yuktikara/data/`: the 17 CSVs, `manifest.json` and
+   `expected_answers.json`.
 4. Import the notebook into the workspace, attach the lakehouse as its default, and **Run all**.
 5. Refresh the ontology's graph model afterwards, if one exists. It doesn't see new rows until you do.
 
-Each run keeps its CSVs, manifest and answer key under `Files/yuktikara/runs/<end date>/`. The numbers
-change from run to run, so mark agent answers against **that run's** `expected_answers.json`, not the
-figures in this README. Never load the answer key into a table: an agent pointed at the lakehouse could
-find it.
+The numbers change every time you regenerate, so mark agent answers against the `expected_answers.json`
+you uploaded with the data, not the figures in this README. Never load the answer key into a table: an agent
+pointed at the lakehouse could find it.
 
 The tables are grouped into schemas by business area, the way Microsoft's IQ solution accelerator lays out
 its lakehouse:
 
 | Schema | Tables |
 |---|---|
-| `sales` | `sales_order`, `sales_order_line`, `sales_return`, `return_reason` |
+| `sales` | `sales_order`, `sales_order_line`, `sales_return`, `return_reason`, `promotion`, `order_line_promotion`, `sales_target` |
 | `product` | `product`, `product_variant`, `supplier` |
-| `store` | `store`, `store_inventory` |
+| `store` | `store`, `store_inventory`, `inventory_balance` |
+| `supply` | `purchase_order`, `purchase_order_line` |
 | `customer` | `customer` |
 | `shared` | `dim_date` |
 

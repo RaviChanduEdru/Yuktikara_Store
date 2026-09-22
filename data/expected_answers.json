@@ -17,12 +17,14 @@
   "net_sales_by_year": {
     "2025": {
       "gross_all_statuses": "8436983.15",
+      "ordertotal_sales_statuses_includes_tax": "8007446.45",
       "subtotal_sales_statuses": "7397173.73",
       "accepted_returns": "557065.99",
       "net_sales": "6840107.74"
     },
     "2026": {
       "gross_all_statuses": "5439503.25",
+      "ordertotal_sales_statuses_includes_tax": "5015175.74",
       "subtotal_sales_statuses": "4632953.44",
       "accepted_returns": "412985.77",
       "net_sales": "4219967.67"
@@ -31,42 +33,49 @@
   "net_sales_by_quarter": {
     "2025-Q1": {
       "gross_all_statuses": "1355806.60",
+      "ordertotal_sales_statuses_includes_tax": "1250269.79",
       "subtotal_sales_statuses": "1154982.97",
       "accepted_returns": "74284.99",
       "net_sales": "1080697.98"
     },
     "2025-Q2": {
       "gross_all_statuses": "2467949.45",
+      "ordertotal_sales_statuses_includes_tax": "2409789.43",
       "subtotal_sales_statuses": "2226131.18",
       "accepted_returns": "155283.87",
       "net_sales": "2070847.31"
     },
     "2025-Q3": {
       "gross_all_statuses": "2301404.75",
+      "ordertotal_sales_statuses_includes_tax": "2091793.39",
       "subtotal_sales_statuses": "1932371.96",
       "accepted_returns": "166175.15",
       "net_sales": "1766196.81"
     },
     "2025-Q4": {
       "gross_all_statuses": "2311822.35",
+      "ordertotal_sales_statuses_includes_tax": "2255593.84",
       "subtotal_sales_statuses": "2083687.62",
       "accepted_returns": "161321.98",
       "net_sales": "1922365.64"
     },
     "2026-Q1": {
       "gross_all_statuses": "1390131.65",
+      "ordertotal_sales_statuses_includes_tax": "1274300.09",
       "subtotal_sales_statuses": "1177181.82",
       "accepted_returns": "123267.19",
       "net_sales": "1053914.63"
     },
     "2026-Q2": {
       "gross_all_statuses": "2466012.55",
+      "ordertotal_sales_statuses_includes_tax": "2404439.71",
       "subtotal_sales_statuses": "2221189.45",
       "accepted_returns": "173388.82",
       "net_sales": "2047800.63"
     },
     "2026-Q3": {
       "gross_all_statuses": "1583359.05",
+      "ordertotal_sales_statuses_includes_tax": "1336435.94",
       "subtotal_sales_statuses": "1234582.17",
       "accepted_returns": "116329.76",
       "net_sales": "1118252.41"
@@ -75,120 +84,140 @@
   "net_sales_by_month": {
     "2025-01": {
       "gross_all_statuses": "410579.40",
+      "ordertotal_sales_statuses_includes_tax": "364139.34",
       "subtotal_sales_statuses": "336387.40",
       "accepted_returns": "13588.77",
       "net_sales": "322798.63"
     },
     "2025-02": {
       "gross_all_statuses": "362278.00",
+      "ordertotal_sales_statuses_includes_tax": "318891.33",
       "subtotal_sales_statuses": "294587.74",
       "accepted_returns": "24257.82",
       "net_sales": "270329.92"
     },
     "2025-03": {
       "gross_all_statuses": "582949.20",
+      "ordertotal_sales_statuses_includes_tax": "567239.12",
       "subtotal_sales_statuses": "524007.83",
       "accepted_returns": "36438.40",
       "net_sales": "487569.43"
     },
     "2025-04": {
       "gross_all_statuses": "729342.00",
+      "ordertotal_sales_statuses_includes_tax": "714790.19",
       "subtotal_sales_statuses": "660313.71",
       "accepted_returns": "44141.70",
       "net_sales": "616172.01"
     },
     "2025-05": {
       "gross_all_statuses": "848726.75",
+      "ordertotal_sales_statuses_includes_tax": "825884.61",
       "subtotal_sales_statuses": "762941.10",
       "accepted_returns": "53454.64",
       "net_sales": "709486.46"
     },
     "2025-06": {
       "gross_all_statuses": "889880.70",
+      "ordertotal_sales_statuses_includes_tax": "869114.63",
       "subtotal_sales_statuses": "802876.37",
       "accepted_returns": "57687.53",
       "net_sales": "745188.84"
     },
     "2025-07": {
       "gross_all_statuses": "814386.40",
+      "ordertotal_sales_statuses_includes_tax": "705968.73",
       "subtotal_sales_statuses": "652164.98",
       "accepted_returns": "60690.79",
       "net_sales": "591474.19"
     },
     "2025-08": {
       "gross_all_statuses": "772150.40",
+      "ordertotal_sales_statuses_includes_tax": "684495.58",
       "subtotal_sales_statuses": "632328.32",
       "accepted_returns": "54036.77",
       "net_sales": "578291.55"
     },
     "2025-09": {
       "gross_all_statuses": "714867.95",
+      "ordertotal_sales_statuses_includes_tax": "701329.08",
       "subtotal_sales_statuses": "647878.66",
       "accepted_returns": "51447.59",
       "net_sales": "596431.07"
     },
     "2025-10": {
       "gross_all_statuses": "624776.75",
+      "ordertotal_sales_statuses_includes_tax": "611557.55",
       "subtotal_sales_statuses": "564948.56",
       "accepted_returns": "47191.83",
       "net_sales": "517756.73"
     },
     "2025-11": {
       "gross_all_statuses": "808781.25",
+      "ordertotal_sales_statuses_includes_tax": "778519.16",
       "subtotal_sales_statuses": "719185.72",
       "accepted_returns": "51181.00",
       "net_sales": "668004.72"
     },
     "2025-12": {
       "gross_all_statuses": "878264.35",
+      "ordertotal_sales_statuses_includes_tax": "865517.13",
       "subtotal_sales_statuses": "799553.34",
       "accepted_returns": "62949.15",
       "net_sales": "736604.19"
     },
     "2026-01": {
       "gross_all_statuses": "412607.95",
+      "ordertotal_sales_statuses_includes_tax": "366165.70",
       "subtotal_sales_statuses": "338259.20",
       "accepted_returns": "53080.16",
       "net_sales": "285179.04"
     },
     "2026-02": {
       "gross_all_statuses": "396865.15",
+      "ordertotal_sales_statuses_includes_tax": "350696.68",
       "subtotal_sales_statuses": "323969.16",
       "accepted_returns": "31760.41",
       "net_sales": "292208.75"
     },
     "2026-03": {
       "gross_all_statuses": "580658.55",
+      "ordertotal_sales_statuses_includes_tax": "557437.71",
       "subtotal_sales_statuses": "514953.46",
       "accepted_returns": "38426.62",
       "net_sales": "476526.84"
     },
     "2026-04": {
       "gross_all_statuses": "711238.75",
+      "ordertotal_sales_statuses_includes_tax": "691890.86",
       "subtotal_sales_statuses": "639159.53",
       "accepted_returns": "49110.82",
       "net_sales": "590048.71"
     },
     "2026-05": {
       "gross_all_statuses": "900287.20",
+      "ordertotal_sales_statuses_includes_tax": "880078.54",
       "subtotal_sales_statuses": "813004.90",
       "accepted_returns": "62884.51",
       "net_sales": "750120.39"
     },
     "2026-06": {
       "gross_all_statuses": "854486.60",
+      "ordertotal_sales_statuses_includes_tax": "832470.31",
       "subtotal_sales_statuses": "769025.02",
       "accepted_returns": "61393.49",
       "net_sales": "707631.53"
     },
     "2026-07": {
       "gross_all_statuses": "804514.15",
+      "ordertotal_sales_statuses_includes_tax": "708222.23",
       "subtotal_sales_statuses": "654246.48",
       "accepted_returns": "62466.19",
       "net_sales": "591780.29"
     },
     "2026-08": {
       "gross_all_statuses": "778844.90",
+      "ordertotal_sales_statuses_includes_tax": "628213.71",
       "subtotal_sales_statuses": "580335.69",
       "accepted_returns": "53863.57",
       "net_sales": "526472.12"
@@ -601,5 +630,391 @@
       "returns_absorbed_at_store": "43952.31",
       "online_returns_absorbed": "9913.65"
     }
-  ]
+  ],
+  "supplier_performance": {
+    "Kestrel Technical Works": {
+      "SupplierID": "SUP01",
+      "promised_lead_time_days": 42,
+      "quality_rating": "4.6",
+      "deliveries": 819,
+      "on_time_pct": "86.57",
+      "avg_days_late_when_late": "5.47",
+      "fill_rate_pct": "98.19",
+      "units_received": 14630,
+      "spend": "1133451.55",
+      "open_orders": 58
+    },
+    "Northaven Textiles": {
+      "SupplierID": "SUP02",
+      "promised_lead_time_days": 28,
+      "quality_rating": "4.8",
+      "deliveries": 822,
+      "on_time_pct": "92.34",
+      "avg_days_late_when_late": "3.46",
+      "fill_rate_pct": "98.57",
+      "units_received": 14366,
+      "spend": "908395.85",
+      "open_orders": 39
+    },
+    "Granite Peak Manufacturing": {
+      "SupplierID": "SUP03",
+      "promised_lead_time_days": 16,
+      "quality_rating": "4.7",
+      "deliveries": 821,
+      "on_time_pct": "95.74",
+      "avg_days_late_when_late": "1.97",
+      "fill_rate_pct": "98.80",
+      "units_received": 16003,
+      "spend": "1229238.89",
+      "open_orders": 22
+    },
+    "Halden Footwear Group": {
+      "SupplierID": "SUP04",
+      "promised_lead_time_days": 55,
+      "quality_rating": "3.4",
+      "deliveries": 812,
+      "on_time_pct": "56.03",
+      "avg_days_late_when_late": "14.17",
+      "fill_rate_pct": "85.47",
+      "units_received": 16323,
+      "spend": "1652859.11",
+      "open_orders": 82
+    },
+    "Selkirk Down Company": {
+      "SupplierID": "SUP05",
+      "promised_lead_time_days": 34,
+      "quality_rating": "4.5",
+      "deliveries": 819,
+      "on_time_pct": "90.72",
+      "avg_days_late_when_late": "4.22",
+      "fill_rate_pct": "97.84",
+      "units_received": 14247,
+      "spend": "1189167.97",
+      "open_orders": 47
+    },
+    "Talus Hardgoods": {
+      "SupplierID": "SUP06",
+      "promised_lead_time_days": 48,
+      "quality_rating": "4.1",
+      "deliveries": 819,
+      "on_time_pct": "76.92",
+      "avg_days_late_when_late": "8.05",
+      "fill_rate_pct": "95.75",
+      "units_received": 14697,
+      "spend": "994696.78",
+      "open_orders": 69
+    },
+    "Juniper Mills": {
+      "SupplierID": "SUP07",
+      "promised_lead_time_days": 39,
+      "quality_rating": "4.3",
+      "deliveries": 824,
+      "on_time_pct": "81.31",
+      "avg_days_late_when_late": "6.38",
+      "fill_rate_pct": "96.88",
+      "units_received": 16487,
+      "spend": "1126228.60",
+      "open_orders": 55
+    }
+  },
+  "open_purchase_orders": {
+    "orders": 372,
+    "units": 6417,
+    "value": "529275.28"
+  },
+  "stock_availability_by_supplier": {
+    "Halden Footwear Group": {
+      "SupplierID": "SUP04",
+      "stockout_days_per_position_month": "0.169",
+      "below_shelf_min_days_per_position_month": "0.169",
+      "position_months": 35740
+    },
+    "Talus Hardgoods": {
+      "SupplierID": "SUP06",
+      "stockout_days_per_position_month": "0.158",
+      "below_shelf_min_days_per_position_month": "0.158",
+      "position_months": 34080
+    },
+    "Kestrel Technical Works": {
+      "SupplierID": "SUP01",
+      "stockout_days_per_position_month": "0.129",
+      "below_shelf_min_days_per_position_month": "0.129",
+      "position_months": 28380
+    },
+    "Northaven Textiles": {
+      "SupplierID": "SUP02",
+      "stockout_days_per_position_month": "0.127",
+      "below_shelf_min_days_per_position_month": "0.127",
+      "position_months": 33620
+    },
+    "Selkirk Down Company": {
+      "SupplierID": "SUP05",
+      "stockout_days_per_position_month": "0.122",
+      "below_shelf_min_days_per_position_month": "0.122",
+      "position_months": 33480
+    },
+    "Juniper Mills": {
+      "SupplierID": "SUP07",
+      "stockout_days_per_position_month": "0.121",
+      "below_shelf_min_days_per_position_month": "0.122",
+      "position_months": 35660
+    },
+    "Granite Peak Manufacturing": {
+      "SupplierID": "SUP03",
+      "stockout_days_per_position_month": "0.118",
+      "below_shelf_min_days_per_position_month": "0.118",
+      "position_months": 34500
+    }
+  },
+  "shelf_state_at_snapshot": {
+    "positions": 11773,
+    "below_shelf_minimum": 1243,
+    "below_shelf_minimum_pct": "10.56",
+    "empty_shelves": 1231,
+    "units_on_hand": 45828,
+    "units_on_the_floor": 14872
+  },
+  "stockout_days_top_styles": {
+    "Glacier Trail Runner": 1335,
+    "Granite Hiking Boot": 1301,
+    "Cirque Insulated Boot": 1298,
+    "Cascade Ridge Hiking Boot": 1242,
+    "Aspen Approach Shoe": 1193,
+    "Granite Down Jacket": 1111,
+    "Alpine Approach Shoe": 1054,
+    "Sawtooth Insulated Boot": 1034,
+    "Selkirk Trail Runner": 1004,
+    "Chinook Approach Shoe": 987
+  },
+  "promotions": {
+    "Winter Clearance 2025": {
+      "PromotionID": "PR2025-1",
+      "type": "Clearance",
+      "runs": "2025-01-01 to 2025-02-28",
+      "lines": 1775,
+      "units": 2058,
+      "markdown": "85391.66",
+      "sales_after_markdown": "261546.44"
+    },
+    "Spring Trail Days 2025": {
+      "PromotionID": "PR2025-2",
+      "type": "Seasonal event",
+      "runs": "2025-03-01 to 2025-06-30",
+      "lines": 1506,
+      "units": 1785,
+      "markdown": "45841.99",
+      "sales_after_markdown": "262839.76"
+    },
+    "Summer Clearance 2025": {
+      "PromotionID": "PR2025-3",
+      "type": "Clearance",
+      "runs": "2025-07-01 to 2025-08-31",
+      "lines": 3534,
+      "units": 4141,
+      "markdown": "176625.90",
+      "sales_after_markdown": "537555.05"
+    },
+    "Autumn Layers Event 2025": {
+      "PromotionID": "PR2025-4",
+      "type": "Seasonal event",
+      "runs": "2025-09-01 to 2025-10-31",
+      "lines": 652,
+      "units": 749,
+      "markdown": "18816.13",
+      "sales_after_markdown": "109295.42"
+    },
+    "Holiday Gift Event 2025": {
+      "PromotionID": "PR2025-5",
+      "type": "Seasonal event",
+      "runs": "2025-11-01 to 2025-12-31",
+      "lines": 881,
+      "units": 1021,
+      "markdown": "25334.09",
+      "sales_after_markdown": "144169.86"
+    },
+    "Winter Clearance 2026": {
+      "PromotionID": "PR2026-1",
+      "type": "Clearance",
+      "runs": "2026-01-01 to 2026-02-28",
+      "lines": 1795,
+      "units": 2098,
+      "markdown": "86166.24",
+      "sales_after_markdown": "262483.86"
+    },
+    "Spring Trail Days 2026": {
+      "PromotionID": "PR2026-2",
+      "type": "Seasonal event",
+      "runs": "2026-03-01 to 2026-06-30",
+      "lines": 1514,
+      "units": 1768,
+      "markdown": "44738.34",
+      "sales_after_markdown": "255489.26"
+    },
+    "Summer Clearance 2026": {
+      "PromotionID": "PR2026-3",
+      "type": "Clearance",
+      "runs": "2026-07-01 to 2026-08-31",
+      "lines": 3381,
+      "units": 3910,
+      "markdown": "167816.93",
+      "sales_after_markdown": "518804.57"
+    }
+  },
+  "net_sales_against_plan": {
+    "months": "2025-01 to 2026-07",
+    "stores": [
+      {
+        "StoreID": "ST008",
+        "StoreName": "Yuktikara Coeur d'Alene",
+        "opened": "2023-03-24",
+        "target": "509350.00",
+        "net_sales": "389000.29",
+        "pct_of_target": "76.37"
+      },
+      {
+        "StoreID": "ST013",
+        "StoreName": "Yuktikara Fort Collins",
+        "opened": "2023-09-15",
+        "target": "512650.00",
+        "net_sales": "401173.54",
+        "pct_of_target": "78.25"
+      },
+      {
+        "StoreID": "ST018",
+        "StoreName": "Yuktikara Flagstaff",
+        "opened": "2023-05-19",
+        "target": "514960.00",
+        "net_sales": "410762.50",
+        "pct_of_target": "79.77"
+      },
+      {
+        "StoreID": "ST009",
+        "StoreName": "Yuktikara Missoula",
+        "opened": "2022-08-12",
+        "target": "418330.00",
+        "net_sales": "376545.06",
+        "pct_of_target": "90.01"
+      },
+      {
+        "StoreID": "ST002",
+        "StoreName": "Yuktikara Tacoma",
+        "opened": "2020-09-08",
+        "target": "418460.00",
+        "net_sales": "380254.02",
+        "pct_of_target": "90.87"
+      },
+      {
+        "StoreID": "ST005",
+        "StoreName": "Yuktikara Eugene",
+        "opened": "2022-04-11",
+        "target": "420950.00",
+        "net_sales": "389965.55",
+        "pct_of_target": "92.64"
+      },
+      {
+        "StoreID": "ST003",
+        "StoreName": "Yuktikara Spokane",
+        "opened": "2021-05-20",
+        "target": "419920.00",
+        "net_sales": "398201.91",
+        "pct_of_target": "94.83"
+      },
+      {
+        "StoreID": "ST012",
+        "StoreName": "Yuktikara Boulder",
+        "opened": "2020-02-28",
+        "target": "421160.00",
+        "net_sales": "399966.81",
+        "pct_of_target": "94.97"
+      },
+      {
+        "StoreID": "ST900",
+        "StoreName": "Yuktikara Online",
+        "opened": "2017-04-01",
+        "target": "1622210.00",
+        "net_sales": "1541091.51",
+        "pct_of_target": "95.00"
+      },
+      {
+        "StoreID": "ST017",
+        "StoreName": "Yuktikara Sacramento",
+        "opened": "2022-06-03",
+        "target": "421220.00",
+        "net_sales": "400198.73",
+        "pct_of_target": "95.01"
+      },
+      {
+        "StoreID": "ST016",
+        "StoreName": "Yuktikara Reno",
+        "opened": "2021-02-26",
+        "target": "421600.00",
+        "net_sales": "405876.80",
+        "pct_of_target": "96.27"
+      },
+      {
+        "StoreID": "ST010",
+        "StoreName": "Yuktikara Bozeman",
+        "opened": "2021-07-30",
+        "target": "420910.00",
+        "net_sales": "410155.21",
+        "pct_of_target": "97.44"
+      },
+      {
+        "StoreID": "ST007",
+        "StoreName": "Yuktikara Boise",
+        "opened": "2020-06-19",
+        "target": "418450.00",
+        "net_sales": "411496.59",
+        "pct_of_target": "98.34"
+      },
+      {
+        "StoreID": "ST014",
+        "StoreName": "Yuktikara Salt Lake City",
+        "opened": "2020-11-06",
+        "target": "416250.00",
+        "net_sales": "412244.74",
+        "pct_of_target": "99.04"
+      },
+      {
+        "StoreID": "ST015",
+        "StoreName": "Yuktikara Park City Outlet",
+        "opened": "2022-12-09",
+        "target": "523800.00",
+        "net_sales": "543778.24",
+        "pct_of_target": "103.81"
+      },
+      {
+        "StoreID": "ST006",
+        "StoreName": "Yuktikara Bend Outlet",
+        "opened": "2021-11-05",
+        "target": "521920.00",
+        "net_sales": "545695.24",
+        "pct_of_target": "104.56"
+      },
+      {
+        "StoreID": "ST011",
+        "StoreName": "Yuktikara Denver LoDo",
+        "opened": "2019-08-16",
+        "target": "840940.00",
+        "net_sales": "886400.15",
+        "pct_of_target": "105.41"
+      },
+      {
+        "StoreID": "ST004",
+        "StoreName": "Yuktikara Portland Pearl",
+        "opened": "2018-10-02",
+        "target": "836320.00",
+        "net_sales": "909935.88",
+        "pct_of_target": "108.80"
+      },
+      {
+        "StoreID": "ST001",
+        "StoreName": "Yuktikara Seattle Flagship",
+        "opened": "2019-03-14",
+        "target": "840830.00",
+        "net_sales": "920860.52",
+        "pct_of_target": "109.52"
+      }
+    ]
+  }
 }

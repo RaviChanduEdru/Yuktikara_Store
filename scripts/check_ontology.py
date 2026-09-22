@@ -46,9 +46,17 @@ TYPES = {  # ontology property type per source column, matching the notebook's e
     "UnitPrice": "double", "LineTotal": "double", "ReturnDate": "datetime", "QuantityReturned": "integer",
     "ReturnAmount": "double", "RestockFlag": "boolean", "SnapshotDate": "datetime", "FloorQty": "integer",
     "BackroomQty": "integer", "OnHandQty": "integer", "FloorMinQty": "integer", "ReorderPoint": "integer",
+    "PurchaseOrderDate": "datetime", "ExpectedDeliveryDate": "datetime", "DeliveredDate": "datetime",
+    "POTotalCost": "double", "QuantityOrdered": "integer", "QuantityReceived": "integer",
+    "POUnitCost": "double", "POLineCost": "double",
+    "PromotionStartDate": "datetime", "PromotionEndDate": "datetime",
+    "TargetMonth": "datetime", "TargetNetSales": "double",
+    "BalanceMonth": "datetime", "OpeningQty": "integer", "ReceivedQty": "integer", "SoldQty": "integer",
+    "ReturnedQty": "integer", "AdjustedQty": "integer", "ClosingQty": "integer",
+    "DaysOutOfStock": "integer", "DaysBelowShelfMin": "integer",
 }
 
-# entity type, lakehouse schema.table (as the refresh notebook writes it), csv, key column, display column, {source column: property name}
+# entity type, lakehouse schema.table (as the load notebook writes it), csv, key column, display column, {source column: property name}
 ENTITIES = [
     ("Store", "store.store", "Store.csv", "StoreID", "StoreName", {}),
     ("Supplier", "product.supplier", "Supplier.csv", "SupplierID", "SupplierName", {}),
@@ -69,6 +77,16 @@ ENTITIES = [
      {"ReturnReasonID": "ReasonID"}),
     ("StoreInventory", "store.store_inventory", "StoreInventory.csv", "InventoryID", "InventoryID",
      {"StoreID": "InventoryStoreID", "VariantID": "InventoryVariantID", "ProductID": "InventoryProductID"}),
+    ("InventoryBalance", "store.inventory_balance", "InventoryBalance.csv", "BalanceID", "BalanceID",
+     {"StoreID": "BalanceStoreID", "VariantID": "BalanceVariantID", "ProductID": "BalanceProductID"}),
+    ("PurchaseOrder", "supply.purchase_order", "PurchaseOrder.csv", "PurchaseOrderID", "PurchaseOrderID",
+     {"SupplierID": "POSupplierID", "StoreID": "POStoreID"}),
+    ("PurchaseOrderLine", "supply.purchase_order_line", "PurchaseOrderLine.csv", "PurchaseOrderLineID",
+     "PurchaseOrderLineID",
+     {"PurchaseOrderID": "POLineOrderID", "VariantID": "POLineVariantID", "ProductID": "POLineProductID"}),
+    ("Promotion", "sales.promotion", "Promotion.csv", "PromotionID", "PromotionName", {}),
+    ("SalesTarget", "sales.sales_target", "SalesTarget.csv", "TargetID", "TargetID",
+     {"StoreID": "TargetStoreID"}),
 ]
 
 # name, origin, target, mapping csv, matched origin column, matched target column
@@ -86,6 +104,15 @@ RELATIONSHIPS = [
     ("returnTakenAtStore", "SalesReturn", "Store", "SalesReturn.csv", "ReturnID", "ReturnStoreID"),
     ("stockAtStore", "StoreInventory", "Store", "StoreInventory.csv", "InventoryID", "StoreID"),
     ("stockOfVariant", "StoreInventory", "ProductVariant", "StoreInventory.csv", "InventoryID", "VariantID"),
+    ("balanceAtStore", "InventoryBalance", "Store", "InventoryBalance.csv", "BalanceID", "StoreID"),
+    ("balanceOfVariant", "InventoryBalance", "ProductVariant", "InventoryBalance.csv", "BalanceID", "VariantID"),
+    ("poFromSupplier", "PurchaseOrder", "Supplier", "PurchaseOrder.csv", "PurchaseOrderID", "SupplierID"),
+    ("poForStore", "PurchaseOrder", "Store", "PurchaseOrder.csv", "PurchaseOrderID", "StoreID"),
+    ("poLineOnOrder", "PurchaseOrderLine", "PurchaseOrder", "PurchaseOrderLine.csv", "PurchaseOrderLineID", "PurchaseOrderID"),
+    ("poLineForVariant", "PurchaseOrderLine", "ProductVariant", "PurchaseOrderLine.csv", "PurchaseOrderLineID", "VariantID"),
+    ("poLineOfStyle", "PurchaseOrderLine", "ProductStyle", "PurchaseOrderLine.csv", "PurchaseOrderLineID", "ProductID"),
+    ("lineOnPromotion", "SalesOrderLine", "Promotion", "OrderLinePromotion.csv", "OrderLineID", "PromotionID"),
+    ("targetForStore", "SalesTarget", "Store", "SalesTarget.csv", "TargetID", "StoreID"),
 ]
 
 NAME = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9_-]{0,24}[A-Za-z0-9])?$")

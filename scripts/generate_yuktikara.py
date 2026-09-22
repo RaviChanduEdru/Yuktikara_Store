@@ -7,10 +7,13 @@ Standard library only. Deterministic: the same seed produces the same bytes.
 from __future__ import annotations
 
 import argparse
+import calendar
 import csv
 import hashlib
 import json
+import math
 import random
+from collections import defaultdict
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -133,8 +136,385 @@ LAST_NAMES = [
 ]
 
 
+# --- Operations: buying, stock over time, promotions and plans ------------------------------------
+# These tables are built after the sales, returns and stock snapshot, from them alone, and with their
+# own random streams, so adding them leaves the original eleven tables byte for byte the same.
+
+SALE_STATUSES = ("Completed", "Shipped")  # orders that took stock and count as sales
+REVIEW_DAYS = 14  # each store reorders from each supplier every two weeks
+
+# Supplier: (share of deliveries that arrive late, fewest days late, most days late, share of lines short-shipped).
+# Halden, who make the Cascade Ridge boot, are the least reliable: late about half the time, often short.
+SUPPLIER_DELIVERY = {
+    "SUP01": (0.12, 3, 8, 0.04),
+    "SUP02": (0.08, 2, 5, 0.03),
+    "SUP03": (0.05, 1, 3, 0.02),
+    "SUP04": (0.45, 7, 21, 0.30),
+    "SUP05": (0.10, 2, 6, 0.04),
+    "SUP06": (0.22, 4, 12, 0.08),
+    "SUP07": (0.18, 3, 10, 0.06),
+}
+# Cost increases that take effect on 1 January of the current year.
+SUPPLIER_PRICE_RISE = {"SUP04": 1.04, "SUP06": 1.06}
+
+# The promotions calendar every discounted sale line belongs to: (first month, last month, name, type, depth).
+# It follows the markdown pattern the sales were generated with.
+PROMOTION_CALENDAR = [
+    (1, 2, "Winter Clearance", "Clearance", "15-40% off"),
+    (3, 6, "Spring Trail Days", "Seasonal event", "10-20% off selected lines"),
+    (7, 8, "Summer Clearance", "Clearance", "15-40% off"),
+    (9, 10, "Autumn Layers Event", "Seasonal event", "10-20% off selected lines"),
+    (11, 12, "Holiday Gift Event", "Seasonal event", "10-20% off selected lines"),
+]
+
+# How far above the plain forecast each store's sales target was set. The newest stores were given the
+# growth plans of established ones, and online an ambitious one.
+NEW_STORE_PLAN_UPLIFT = 1.22
+ONLINE_PLAN_UPLIFT = 1.12
+
+
 def money(cents: int) -> str:
     return f"{cents / 100:.2f}"
+
+
+def cents(value: str) -> int:
+    return int(round(float(value) * 100))
+
+
+def month_starts(start: date, end: date):
+    first = date(start.year, start.month, 1)
+    while first <= end:
+        yield first
+        first = date(first.year + (first.month == 12), first.month % 12 + 1, 1)
+
+
+def build_promotions(start: date, end: date, orders: list, lines: list):
+    """Named promotions, and the promotion each discounted order line was sold under."""
+    promotions = []
+    promo_for_month = {}
+    for year in range(start.year, end.year + 1):
+        for index, (first_month, last_month, name, kind, depth) in enumerate(PROMOTION_CALENDAR, 1):
+            first = date(year, first_month, 1)
+            if first > end:
+                continue
+            promo_id = f"PR{year}-{index}"
+            promotions.append({
+                "PromotionID": promo_id,
+                "PromotionName": f"{name} {year}",
+                "PromotionType": kind,
+                "PromotionStartDate": first.isoformat(),
+                "PromotionEndDate": date(year, last_month, calendar.monthrange(year, last_month)[1]).isoformat(),
+                "DiscountDepth": depth,
+            })
+            for month in range(first_month, last_month + 1):
+                promo_for_month[(year, month)] = promo_id
+    order_date = {o["OrderID"]: o["OrderDate"] for o in orders}
+    links = []
+    for line in lines:
+        if line["DiscountAmount"] != "0.00":
+            day = order_date[line["OrderID"]]
+            links.append({"OrderLineID": line["OrderLineID"], "PromotionID": promo_for_month[(int(day[:4]), int(day[5:7]))]})
+    return promotions, links
+
+
+def build_targets(rng: random.Random, start: date, end: date, orders: list, returns: list):
+    """Monthly net sales targets per store, for the window and the rest of the current year.
+
+    The plan is built from each store's trading pattern, then calibrated so that the chain's plan matches
+    the rate it actually trades at. On top of that, the newest stores and online were given growth plans.
+    """
+    sale_ids = {o["OrderID"] for o in orders if o["OrderStatus"] in SALE_STATUSES}
+    store_of_order = {o["OrderID"]: o["StoreID"] for o in orders}
+    actual = defaultdict(int)  # (store, month) -> net cents
+    for o in orders:
+        if o["OrderID"] in sale_ids:
+            actual[(o["StoreID"], o["OrderDate"][:7])] += cents(o["SubTotal"])
+    for r in returns:
+        if r["ReturnStatus"] == "Accepted":
+            actual[(store_of_order[r["OrderID"]], r["ReturnDate"][:7])] -= cents(r["ReturnAmount"])
+
+    def trading_pattern(store, first, last):
+        fmt, opened = store[7], store[9]
+        expected = 0.0
+        for day in daterange(first, last):
+            if day < opened:
+                continue
+            weekend = day.weekday() >= 5 and fmt != "Ecommerce"
+            expected += STORE_DAILY_ORDERS[fmt] * MONTH_FACTOR[day.month] * (1.55 if weekend else 1.0)
+        return expected
+
+    plan_end = date(end.year, 12, 31)
+    months = []
+    for first in month_starts(start, plan_end):
+        last = date(first.year, first.month, calendar.monthrange(first.year, first.month)[1])
+        months.append((first, last, last <= end))
+    shape = {(store[0], first): trading_pattern(store, first, last) for store in STORES for first, last, _ in months}
+    # One value per expected order, taken from the months already traded, so the plan lands on the real run rate.
+    traded_shape = sum(shape[(store[0], first)] for store in STORES for first, _, complete in months if complete)
+    traded_net = sum(actual[(store[0], f"{first:%Y-%m}")] for store in STORES for first, _, complete in months if complete)
+    per_order = traded_net / traded_shape if traded_shape else 0
+
+    targets = []
+    for store in STORES:
+        store_id, fmt, opened = store[0], store[7], store[9]
+        uplift = NEW_STORE_PLAN_UPLIFT if opened.year >= 2023 else ONLINE_PLAN_UPLIFT if fmt == "Ecommerce" else 1.0
+        for first, _, _ in months:
+            target = shape[(store_id, first)] * per_order * uplift * rng.uniform(0.97, 1.03)
+            targets.append({
+                "TargetID": f"{store_id}-{first:%Y%m}",
+                "StoreID": store_id,
+                "TargetMonth": first.isoformat(),
+                "TargetNetSales": money(int(round(target / 1000)) * 1000),
+            })
+    return targets
+
+
+def build_supply_and_stock(rng: random.Random, start: date, end: date, products: list, variants: list,
+                           line_index: list, returns: list):
+    """Purchase orders and deliveries, and a monthly stock ledger for every RFID position in the snapshot.
+
+    Each store reorders from each supplier every two weeks. For the snapshot's positions the ledger is
+    built backwards from the snapshot, so it closes on exactly the counted stock: stock on the day before a
+    delivery is what the delivery tops up from. A late delivery leaves the shelf low or empty first, so
+    unreliable suppliers show up as stockout days. Other store and variant pairs, including online and
+    equipment, are replenished with what they sold in the two weeks before each order.
+    """
+    product_by_id = {p["ProductID"]: p for p in products}
+    lead_of = {s[0]: s[3] for s in SUPPLIERS}
+    months = list(month_starts(start, end))
+    variant_product = {v["VariantID"]: v["ProductID"] for v in variants}
+    supplier_of_variant = {v: product_by_id[p]["SupplierID"] for v, p in variant_product.items()}
+    days = list(daterange(start, end))
+    day_index = {day: i for i, day in enumerate(days)}
+    n_days = len(days)
+
+    sold = defaultdict(lambda: defaultdict(int))  # (store, variant) -> day index -> units
+    for item in line_index:
+        if item["Status"] in SALE_STATUSES:
+            sold[(item["StoreID"], item["VariantID"])][day_index[item["Date"]]] += item["Qty"]
+    restocked = defaultdict(lambda: defaultdict(int))
+    for r in returns:
+        if r["ReturnStatus"] == "Accepted" and r["RestockFlag"] == "true":
+            restocked[(r["ReturnStoreID"], r["VariantID"])][day_index[date.fromisoformat(r["ReturnDate"])]] += r["QuantityReturned"]
+
+    # Delivery cycles per store and supplier: ordered, expected after the supplier's lead time, delivered.
+    schedule = {}
+    for store in STORES:
+        for sup_id, _, _, lead_days, _ in SUPPLIERS:
+            late_share, fewest, most, _ = SUPPLIER_DELIVERY[sup_id]
+            expected = start - timedelta(days=REVIEW_DAYS - rng.randrange(REVIEW_DAYS))
+            cycles = []
+            while expected - timedelta(days=lead_days) <= end:
+                late = rng.random() < late_share
+                delivered = expected + timedelta(days=rng.randint(fewest, most) if late else 0)
+                if delivered >= start:
+                    cycles.append({"ordered": expected - timedelta(days=lead_days), "expected": expected,
+                                   "delivered": delivered, "late": late})
+                expected += timedelta(days=REVIEW_DAYS)
+            schedule[(store[0], sup_id)] = cycles
+
+    def demand_before(key, ordered_on):
+        """Units the pair sold in the two weeks before an order (the window's first two weeks for earlier orders)."""
+        first = max(start, ordered_on - timedelta(days=REVIEW_DAYS))
+        if ordered_on <= start:
+            first = start
+        history = sold.get(key, {})
+        return sum(history.get(day_index[first + timedelta(days=k)], 0)
+                   for k in range(REVIEW_DAYS) if first + timedelta(days=k) <= end)
+
+    # What each store keeps of each variant: what it sells there, plus some ranged but slow lines.
+    # The shelf minimum and the order-up-to level follow how fast the pair actually sells.
+    positions = []
+    for store in STORES:
+        if store[7] == "Ecommerce":
+            continue
+        for variant in variants:
+            key = (store[0], variant["VariantID"])
+            units = sum(sold.get(key, {}).values())
+            if not units and rng.random() >= 0.22:
+                continue
+            monthly = units / max(1, len(months))
+            floor_min = max(1, min(6, round(monthly * 0.6)))
+            cover = monthly / 30 * (REVIEW_DAYS + lead_of[supplier_of_variant[variant["VariantID"]]])
+            positions.append({
+                "store": store[0], "variant": variant["VariantID"], "product": variant["ProductID"],
+                "floor_min": floor_min,
+                "reorder": max(floor_min, math.ceil(cover * 0.5)),
+                "upto": floor_min + max(1, math.ceil(cover)),
+            })
+
+    # Forwards through the window. Every two weeks a store orders each pair back up to its level,
+    # counting what is already on the way, and the supplier delivers it a lead time later, sometimes
+    # late and sometimes short. A late or short delivery leaves the shelf low or empty, so unreliable
+    # suppliers cost availability.
+    ordered_by_cycle, received_by_cycle = {}, {}
+    ledger, inventory, transfers = [], [], 0
+    for pos in positions:
+        store_id, variant_id = pos["store"], pos["variant"]
+        key = (store_id, variant_id)
+        sup_id = supplier_of_variant[variant_id]
+        short_share = SUPPLIER_DELIVERY[sup_id][3]
+        cycles = schedule[(store_id, sup_id)]
+        orders_on, deliveries = defaultdict(list), defaultdict(list)
+        for ci, cycle in enumerate(cycles):
+            if start <= cycle["ordered"] <= end:
+                orders_on[day_index[cycle["ordered"]]].append(ci)
+            if cycle["delivered"] <= end:
+                deliveries[day_index[cycle["delivered"]]].append(ci)
+        pos_sold, pos_back = sold.get(key, {}), restocked.get(key, {})
+        close = [0] * n_days
+        received = [0] * n_days
+        adjusted = [0] * n_days
+        stock = pos["upto"]
+        opening = stock
+        on_order = 0
+        for i in range(n_days):
+            for ci in deliveries.get(i, []):
+                got = received_by_cycle.get((store_id, sup_id, ci, variant_id))
+                if got is None:  # ordered before the window: the pipeline the store started with
+                    got = max(0, pos["upto"] - stock)
+                    if got:
+                        ordered_by_cycle[(store_id, sup_id, ci, variant_id)] = got
+                        received_by_cycle[(store_id, sup_id, ci, variant_id)] = got
+                received[i] += got
+                stock += got
+                on_order -= ordered_by_cycle.get((store_id, sup_id, ci, variant_id), 0)
+            for ci in orders_on.get(i, []):
+                # Reorder only once the pair is down to its reorder point, as a store would.
+                if stock + on_order > pos["reorder"]:
+                    continue
+                want = max(0, pos["upto"] - stock - on_order)
+                if not want:
+                    continue
+                got = max(0, int(want * rng.uniform(0.70, 0.92))) if rng.random() < short_share else want
+                ordered_by_cycle[(store_id, sup_id, ci, variant_id)] = want
+                received_by_cycle[(store_id, sup_id, ci, variant_id)] = got
+                on_order += want
+            stock += pos_back.get(i, 0)
+            want = pos_sold.get(i, 0)
+            if want > stock:  # the shelf was short, so another store sent some over
+                short = want - stock
+                adjusted[i] += short
+                transfers += short
+                stock += short
+            stock -= want
+            if (days[i] + timedelta(days=1)).month != days[i].month and stock and rng.random() < 0.07:
+                loss = min(1 if rng.random() < 0.8 else 2, stock)  # the month-end count finds a loss
+                adjusted[i] -= loss
+                stock -= loss
+            close[i] = stock
+
+        # What the RFID count finds on the shop floor at the end. The rest is in the stockroom, and
+        # shelves that have fallen below their minimum are the ones staff should refill.
+        floor = max(0, min(stock, round(rng.gauss(pos["floor_min"] * 1.25, pos["floor_min"] * 0.6))))
+        inventory.append({
+            "InventoryID": f"{store_id}-{variant_id}",
+            "StoreID": store_id,
+            "VariantID": variant_id,
+            "ProductID": pos["product"],
+            "SnapshotDate": end.isoformat(),
+            "FloorQty": floor,
+            "BackroomQty": stock - floor,
+            "OnHandQty": stock,
+            "FloorMinQty": pos["floor_min"],
+            "ReorderPoint": pos["reorder"],
+        })
+        for first in months:
+            a = day_index[first]
+            b = day_index[min(end, date(first.year, first.month, calendar.monthrange(first.year, first.month)[1]))]
+            row = {
+                "BalanceID": f"{store_id}-{variant_id}-{first:%Y%m}",
+                "StoreID": store_id,
+                "VariantID": variant_id,
+                "ProductID": pos["product"],
+                "BalanceMonth": first.isoformat(),
+                "OpeningQty": close[a - 1] if a else opening,
+                "ReceivedQty": sum(received[a:b + 1]),
+                "SoldQty": sum(pos_sold.get(k, 0) for k in range(a, b + 1)),
+                "ReturnedQty": sum(pos_back.get(k, 0) for k in range(a, b + 1)),
+                "AdjustedQty": sum(adjusted[a:b + 1]),
+                "ClosingQty": close[b],
+                "DaysOutOfStock": sum(1 for k in range(a, b + 1) if close[k] == 0),
+                "DaysBelowShelfMin": sum(1 for k in range(a, b + 1) if close[k] < pos["floor_min"]),
+            }
+            assert (row["OpeningQty"] + row["ReceivedQty"] - row["SoldQty"] + row["ReturnedQty"]
+                    + row["AdjustedQty"] == row["ClosingQty"]), row["BalanceID"]
+            ledger.append(row)
+    tracked = {(p["store"], p["variant"]) for p in positions}
+
+    # Purchase orders: one per store, supplier and cycle that has anything on it.
+    variants_by_supplier = defaultdict(set)
+    for (store_id, variant_id) in set(sold) | tracked:
+        variants_by_supplier[(store_id, supplier_of_variant[variant_id])].add(variant_id)
+
+    drafts = []
+    for store in STORES:
+        for sup_id, _, _, _, _ in SUPPLIERS:
+            _, _, _, short_share = SUPPLIER_DELIVERY[sup_id]
+            for ci, cycle in enumerate(schedule[(store[0], sup_id)]):
+                is_open = cycle["delivered"] > end
+                unit_rise = SUPPLIER_PRICE_RISE.get(sup_id, 1.0) if cycle["ordered"] >= date(end.year, 1, 1) else 1.0
+                po_lines = []
+                for variant_id in sorted(variants_by_supplier.get((store[0], sup_id), ())):
+                    key = (store[0], variant_id)
+                    if key in tracked and not is_open:
+                        ordered = ordered_by_cycle.get((store[0], sup_id, ci, variant_id), 0)
+                        if not ordered:
+                            continue
+                        got = received_by_cycle[(store[0], sup_id, ci, variant_id)]
+                        product_id = variant_product[variant_id]
+                        unit_cost = int(round(cents(product_by_id[product_id]["UnitCost"]) * unit_rise))
+                        po_lines.append({"VariantID": variant_id, "ProductID": product_id, "QuantityOrdered": ordered,
+                                         "QuantityReceived": got, "unit": unit_cost})
+                        continue
+                    qty = (ordered_by_cycle.get((store[0], sup_id, ci, variant_id), 0) if key in tracked
+                           else demand_before(key, cycle["ordered"]))
+                    if not qty:
+                        continue
+                    if is_open:
+                        ordered, got = qty, 0
+                    elif rng.random() < short_share:
+                        fill = rng.uniform(0.75, 0.95)
+                        if key in tracked:
+                            ordered, got = max(qty + 1, math.ceil(qty / fill)), qty
+                        else:
+                            ordered, got = qty, int(qty * fill)
+                    else:
+                        ordered, got = qty, qty
+                    product_id = variant_product[variant_id]
+                    unit_cost = int(round(cents(product_by_id[product_id]["UnitCost"]) * unit_rise))
+                    po_lines.append({"VariantID": variant_id, "ProductID": product_id, "QuantityOrdered": ordered,
+                                     "QuantityReceived": got, "unit": unit_cost})
+                if po_lines:
+                    drafts.append((cycle, store[0], sup_id, is_open, po_lines))
+
+    drafts.sort(key=lambda d: (d[0]["ordered"], d[1], d[2]))
+    purchase_orders, purchase_order_lines = [], []
+    for n, (cycle, store_id, sup_id, is_open, po_lines) in enumerate(drafts, 1):
+        po_id = f"PO{n:06d}"
+        complete = all(l["QuantityReceived"] == l["QuantityOrdered"] for l in po_lines)
+        purchase_orders.append({
+            "PurchaseOrderID": po_id,
+            "SupplierID": sup_id,
+            "StoreID": store_id,
+            "PurchaseOrderDate": cycle["ordered"].isoformat(),
+            "ExpectedDeliveryDate": cycle["expected"].isoformat(),
+            "DeliveredDate": "" if is_open else cycle["delivered"].isoformat(),
+            "POStatus": "Open" if is_open else "Received" if complete else "Partially received",
+            "POTotalCost": money(sum(l["QuantityOrdered"] * l["unit"] for l in po_lines)),
+        })
+        for k, l in enumerate(po_lines, 1):
+            purchase_order_lines.append({
+                "PurchaseOrderLineID": f"{po_id}-{k}",
+                "PurchaseOrderID": po_id,
+                "VariantID": l["VariantID"],
+                "ProductID": l["ProductID"],
+                "QuantityOrdered": l["QuantityOrdered"],
+                "QuantityReceived": l["QuantityReceived"],
+                "POUnitCost": money(l["unit"]),
+                "POLineCost": money(l["QuantityOrdered"] * l["unit"]),
+            })
+    return purchase_orders, purchase_order_lines, ledger, inventory, transfers
 
 
 def daterange(start: date, end: date):
@@ -411,30 +791,6 @@ def main() -> int:
             "RestockFlag": "true" if status == "Accepted" and reason not in ("RR4",) else "false",
         })
 
-    inventory = []
-    rfid_variants = [v for v in variants if product_by_id[v["ProductID"]]["IsRfidTagged"] == "true"]
-    for store in STORES:
-        if store[7] == "Ecommerce":
-            continue
-        for v in rfid_variants:
-            if rng.random() > 0.55:
-                continue
-            floor_min = rng.choices([2, 3, 4, 6], [0.4, 0.3, 0.2, 0.1])[0]
-            floor = max(0, int(rng.gauss(floor_min * 2.1, floor_min * 0.9)))
-            backroom = max(0, int(rng.gauss(floor_min * 1.6, floor_min * 1.1)))
-            inventory.append({
-                "InventoryID": f"{store[0]}-{v['VariantID']}",
-                "StoreID": store[0],
-                "VariantID": v["VariantID"],
-                "ProductID": v["ProductID"],
-                "SnapshotDate": end.isoformat(),
-                "FloorQty": floor,
-                "BackroomQty": backroom,
-                "OnHandQty": floor + backroom,
-                "FloorMinQty": floor_min,
-                "ReorderPoint": floor_min * 3,
-            })
-
     dim_date = []
     for day in daterange(start, end):
         quarter = (day.month - 1) // 3 + 1
@@ -465,6 +821,12 @@ def main() -> int:
 
     reason_rows = [{"ReturnReasonID": r[0], "ReturnReasonName": r[1], "ReturnCategory": r[2]} for r in RETURN_REASONS]
 
+    # Buying, stock, promotions and plans, from the sales above and their own random streams.
+    purchase_orders, purchase_order_lines, inventory_balance, inventory, transfers = build_supply_and_stock(
+        random.Random(SEED + 11), start, end, products, variants, line_index, returns)
+    promotions, line_promotions = build_promotions(start, end, orders, lines)
+    targets = build_targets(random.Random(SEED + 22), start, end, orders, returns)
+
     for v in variants:
         for key in ("_dept", "_weight", "_price_cents", "_name"):
             v.pop(key)
@@ -481,6 +843,12 @@ def main() -> int:
         "SalesReturn.csv": returns,
         "ReturnReason.csv": reason_rows,
         "StoreInventory.csv": inventory,
+        "PurchaseOrder.csv": purchase_orders,
+        "PurchaseOrderLine.csv": purchase_order_lines,
+        "InventoryBalance.csv": inventory_balance,
+        "Promotion.csv": promotions,
+        "OrderLinePromotion.csv": line_promotions,
+        "SalesTarget.csv": targets,
     }
 
     manifest = {"company": "Yuktikara Store", "seed": SEED,

@@ -62,7 +62,7 @@ different question.
 | Folder | Holds | Episode |
 |---|---|---|
 | `lakehouses` | `yuktikara_lh` | 1 |
-| `notebooks` | `refresh_yuktikara_data` | 1 |
+| `notebooks` | `load_yuktikara_data` | 1 |
 | `dashboards` | the `Yuktikara Sales` semantic model; the net sales report later | 1, 2 |
 | `ontology` | `Yuktikara_Ontology` and its graph model | 1 |
 | `data_agent` | the lakehouse agent and the ontology agent | 2 |
@@ -96,7 +96,7 @@ Items with restricted names use underscores; items people read in Power BI or ch
 |---|---|---|
 | Workspace | `Yuktikara Retail - Demo` | Section 1 |
 | Lakehouse | `yuktikara_lh` | Letters, numbers and underscores only. The `_lh` suffix follows the review accelerator's `fabric_arch_review_lh` |
-| Notebook | `refresh_yuktikara_data` | Same as the file in [`fabric/`](../fabric/refresh_yuktikara_data.ipynb), so the repo and the workspace match |
+| Notebook | `load_yuktikara_data` | Same as the file in [`fabric/`](../fabric/load_yuktikara_data.ipynb), so the repo and the workspace match |
 | Semantic model | `Yuktikara Sales` | Business users see this name in Power BI |
 | Ontology | `Yuktikara_Ontology` | Letters, numbers and underscores only; no spaces or dashes |
 | Graph model | Named by Fabric | Created with the ontology |
@@ -111,19 +111,19 @@ lakehouse with OneLake security.
 **Files** hold the raw material:
 
 ```text
-Files/yuktikara/scripts/              the generator and oracle, uploaded by hand
-Files/yuktikara/runs/<end date>/      one folder per notebook run: 11 CSVs, manifest.json, expected_answers.json
+Files/yuktikara/data/                 the repo's data folder: 17 CSVs, manifest.json, expected_answers.json
 ```
 
-**Tables** go into five schemas by business area, the same layout as the IQ accelerator's lakehouse
-(`sales`, `product`, `customer`, `shared` and others). The refresh notebook creates the schemas if they're
+**Tables** go into six schemas by business area, the same layout as the IQ accelerator's lakehouse
+(`sales`, `product`, `customer`, `shared` and others). The load notebook creates the schemas if they're
 missing. You can also create them by hand first: **Tables → … → New schema**.
 
 | Schema | Tables |
 |---|---|
-| `sales` | `sales_order`, `sales_order_line`, `sales_return`, `return_reason` |
+| `sales` | `sales_order`, `sales_order_line`, `sales_return`, `return_reason`, `promotion`, `order_line_promotion`, `sales_target` |
 | `product` | `product`, `product_variant`, `supplier` |
-| `store` | `store`, `store_inventory` |
+| `store` | `store`, `store_inventory`, `inventory_balance` |
+| `supply` | `purchase_order`, `purchase_order_line` |
 | `customer` | `customer` |
 | `shared` | `dim_date` |
 
@@ -168,7 +168,7 @@ Building it (Microsoft Learn, *Set up a task flow* and *Work with task flows*):
 
 | # | Task name | Task type | Items | Episode |
 |---:|---|---|---|---|
-| 1 | Generate data | Get data | `refresh_yuktikara_data` | 1 |
+| 1 | Load data | Get data | `load_yuktikara_data` | 1 |
 | 2 | Lakehouse | Store data | `yuktikara_lh` | 1 |
 | 3 | Sales model | Visualize data | `Yuktikara Sales`; the net sales report in Episode 2 | 1, 2 |
 | 4 | Ontology | General | `Yuktikara_Ontology` and its graph model | 1 |
@@ -185,7 +185,7 @@ Task descriptions to paste:
 
 | Task | Description |
 |---|---|
-| Generate data | Regenerates the synthetic dataset for a window ending yesterday and loads typed tables. The one notebook in an otherwise hand-built series. |
+| Load data | Writes the uploaded CSVs as lakehouse tables with explicit column types, then checks them. The one notebook in an otherwise hand-built series, and it only loads. |
 | Lakehouse | Raw CSVs per run under Files; typed Delta tables in the sales, product, store, customer and shared schemas. |
 | Sales model | Direct Lake semantic model with the Net Sales measure: the figure people already trust. |
 | Ontology | Entity types, relationships and bindings that describe the business, and the graph built from them. |
@@ -221,7 +221,7 @@ Rules this setup follows:
 | GOV-007 | The Capacity Metrics app is installed | Install it; it's the only ongoing view of what the graph and Spark cost on an F2 |
 | GOV-008, GOV-009 | Trusted content is endorsed | The semantic model is promoted |
 | COST-002, COST-003 | Non-production capacities are paused when idle | Pause the F2 after every session |
-| NBCODE-001 | No secrets in notebooks | The refresh notebook holds none |
+| NBCODE-001 | No secrets in notebooks | The load notebook holds none |
 | NBCODE-002 | No inline `%pip install` | The notebook and scripts use only the Python standard library and Spark |
 | NBCODE-005 | No hard-coded `abfss://` paths or GUIDs | Paths are relative to the default lakehouse |
 | NBCODE-006 | Write Delta, not Parquet or CSV | Every table is written as Delta |

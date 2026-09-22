@@ -58,9 +58,39 @@
       "sha256": "719ff55cb88ad2e2bcadf8b6738f244dd694182a6a3178a4d6f4900a194af271"
     },
     "StoreInventory.csv": {
-      "rows": 7025,
-      "bytes": 379675,
-      "sha256": "e4ea6e854ab3a4d6b5b0355421e4108e2f736147fab552e1e22581eeb8eb93cd"
+      "rows": 11773,
+      "bytes": 624411,
+      "sha256": "493c6be32e56f76ec3388922b1a13359e2674a54d9088a036d1a898dafc12e84"
+    },
+    "PurchaseOrder.csv": {
+      "rows": 6108,
+      "bytes": 449312,
+      "sha256": "756d6b3365e69bc1401b2b0dbc120e31b8e105fbdd2f8d904d3e8d3acf80189b"
+    },
+    "PurchaseOrderLine.csv": {
+      "rows": 81170,
+      "bytes": 4055558,
+      "sha256": "4f033c39c0ce2652948021450f192b217b6ad64ba3e8af2a5093ff88463a87b9"
+    },
+    "InventoryBalance.csv": {
+      "rows": 235460,
+      "bytes": 15564444,
+      "sha256": "8373884451824828b3256354ef1389724d19e5554c6f5c182d52a280bd8ed769"
+    },
+    "Promotion.csv": {
+      "rows": 8,
+      "bytes": 769,
+      "sha256": "6da2df9472ae21fa45641fbb383f51064f03823bce3707192199b0c8ace6f360"
+    },
+    "OrderLinePromotion.csv": {
+      "rows": 16501,
+      "bytes": 330044,
+      "sha256": "c171502ea8ca17d1ba95a2a2814f90fb18a65bc6876a5f4ee8e739bf169a47b4"
+    },
+    "SalesTarget.csv": {
+      "rows": 456,
+      "bytes": 17836,
+      "sha256": "5403454f689624c5a3e1eb5c35b036f1b3dd13be57c98c5aeecbaf379c16d434"
     }
   }
 }

@@ -17,28 +17,29 @@ Ontology is a preview feature. The UI labels below come from the Microsoft Learn
 |---|---|
 | Tenant setting **Ontology item (preview)** is on | Workspace → **+ New item** lists **Ontology (preview)** |
 | Workspace is on a Fabric capacity (F2 or above) | Workspace settings → License info |
-| Lakehouse `yuktikara_lh` created with **Lakehouse schemas**, OneLake security **off** | Tables show the schemas `customer`, `product`, `sales`, `shared`, `store` (plus the empty default `dbo`) |
-| The 11 tables are loaded | The refresh notebook's *Verify* cell ends in `PASS` |
+| Lakehouse `yuktikara_lh` created with **Lakehouse schemas**, OneLake security **off** | Tables show the schemas `customer`, `product`, `sales`, `shared`, `store`, `supply` (plus the empty default `dbo`) |
+| The 17 tables are loaded | The load notebook's *Verify* cell ends in `PASS` |
 
 ## Three design decisions to understand first
 
 **Every property name is unique across the whole ontology.** An ontology has one namespace for properties,
 and Microsoft's binding page requires names to be unique across all entity types. `StoreID` appears in
-three tables, so only the `Store` entity type keeps that name; the order's copy becomes `OrderStoreID` and
-the inventory's becomes `InventoryStoreID`. The rule used throughout is: an entity's own key keeps its
-column name, and a reference to something else takes its owner's prefix. That gives 20 renames in total,
+seven tables, so only the `Store` entity type keeps that name; the order's copy becomes `OrderStoreID` and
+the stock ledger's becomes `BalanceStoreID`. The rule used throughout is: an entity's own key keeps its
+column name, and a reference to something else takes its owner's prefix. That gives 29 renames in total,
 marked **(rename)** below. The one exception is `ReturnReason`, whose key becomes `ReasonID` so that a
 return can keep the natural `ReturnReasonID`.
 
 **`Product` can't be an entity type name.** `PRODUCT` is a GQL reserved word, as are `ORDER` and `RETURN`.
 The style-level table becomes **`ProductStyle`**; the sellable size-and-colour item is **`ProductVariant`**.
 
-**Every entity type has a single-column key.** Order lines and inventory rows are naturally identified by
-two columns, but relationships match one column per side, so the data carries `OrderLineID`
-(`SO000001-1`) and `InventoryID` (`ST001-V00002`).
+**Every entity type has a single-column key.** Order lines, stock positions and monthly stock balances are
+naturally identified by several columns, but relationships match one column per side, so the data carries
+`OrderLineID` (`SO000001-1`), `InventoryID` (`ST001-V00002`) and `BalanceID` (`ST001-V00002-202501`).
 
-`dim_date` gets no entity type: dates are properties on the things that happen, and the date table exists
-for the semantic model and the lakehouse-only comparison agent.
+Two tables get no entity type. `dim_date`, because dates are properties on the things that happen, and the
+date table exists for the semantic model and the lakehouse-only comparison agent. And
+`order_line_promotion`, which is only the mapping table behind the `lineOnPromotion` relationship.
 
 ## Step 1: create the ontology item
 
@@ -51,7 +52,7 @@ Ontology names take letters, numbers and underscores only; no spaces or dashes. 
 
 ## Step 2: entity types and their data bindings
 
-Build **all ten entity types and bindings before any relationship**: a relationship needs a key on both
+Build **all fifteen entity types and bindings before any relationship**: a relationship needs a key on both
 ends.
 
 ### Walkthrough, using Store
@@ -77,8 +78,8 @@ ends.
 A **Timeseries data** section may appear. Ignore it for now: every binding here is static, and each entity
 type takes exactly one static binding. The live RFID feed arrives later as a time-series binding.
 
-Repeat for the other nine, in this order. Instance counts are for the committed snapshot. After a notebook
-run, compare against that run's `Files/yuktikara/runs/<end date>/manifest.json` instead.
+Repeat for the other fourteen, in this order. Instance counts are for the committed snapshot. After a notebook
+regeneration, compare against the `manifest.json` you uploaded with the data instead.
 
 <!-- generated:entities -->
 ### Store
@@ -224,7 +225,7 @@ Table `sales.return_reason` · key **`ReasonID`** · display name **`ReturnReaso
 
 ### StoreInventory
 
-Table `store.store_inventory` · key **`InventoryID`** · display name **`InventoryID`** · 7,025 instances in the committed snapshot
+Table `store.store_inventory` · key **`InventoryID`** · display name **`InventoryID`** · 11,773 instances in the committed snapshot
 
 | Source column | Property name | Type |
 |---|---|---|
@@ -238,9 +239,83 @@ Table `store.store_inventory` · key **`InventoryID`** · display name **`Invent
 | `OnHandQty` | `OnHandQty` | integer |
 | `FloorMinQty` | `FloorMinQty` | integer |
 | `ReorderPoint` | `ReorderPoint` | integer |
+
+### InventoryBalance
+
+Table `store.inventory_balance` · key **`BalanceID`** · display name **`BalanceID`** · 235,460 instances in the committed snapshot
+
+| Source column | Property name | Type |
+|---|---|---|
+| `BalanceID` | `BalanceID` | string |
+| `StoreID` | **`BalanceStoreID`** (rename) | string |
+| `VariantID` | **`BalanceVariantID`** (rename) | string |
+| `ProductID` | **`BalanceProductID`** (rename) | string |
+| `BalanceMonth` | `BalanceMonth` | datetime |
+| `OpeningQty` | `OpeningQty` | integer |
+| `ReceivedQty` | `ReceivedQty` | integer |
+| `SoldQty` | `SoldQty` | integer |
+| `ReturnedQty` | `ReturnedQty` | integer |
+| `AdjustedQty` | `AdjustedQty` | integer |
+| `ClosingQty` | `ClosingQty` | integer |
+| `DaysOutOfStock` | `DaysOutOfStock` | integer |
+| `DaysBelowShelfMin` | `DaysBelowShelfMin` | integer |
+
+### PurchaseOrder
+
+Table `supply.purchase_order` · key **`PurchaseOrderID`** · display name **`PurchaseOrderID`** · 6,108 instances in the committed snapshot
+
+| Source column | Property name | Type |
+|---|---|---|
+| `PurchaseOrderID` | `PurchaseOrderID` | string |
+| `SupplierID` | **`POSupplierID`** (rename) | string |
+| `StoreID` | **`POStoreID`** (rename) | string |
+| `PurchaseOrderDate` | `PurchaseOrderDate` | datetime |
+| `ExpectedDeliveryDate` | `ExpectedDeliveryDate` | datetime |
+| `DeliveredDate` | `DeliveredDate` | datetime |
+| `POStatus` | `POStatus` | string |
+| `POTotalCost` | `POTotalCost` | double |
+
+### PurchaseOrderLine
+
+Table `supply.purchase_order_line` · key **`PurchaseOrderLineID`** · display name **`PurchaseOrderLineID`** · 81,170 instances in the committed snapshot
+
+| Source column | Property name | Type |
+|---|---|---|
+| `PurchaseOrderLineID` | `PurchaseOrderLineID` | string |
+| `PurchaseOrderID` | **`POLineOrderID`** (rename) | string |
+| `VariantID` | **`POLineVariantID`** (rename) | string |
+| `ProductID` | **`POLineProductID`** (rename) | string |
+| `QuantityOrdered` | `QuantityOrdered` | integer |
+| `QuantityReceived` | `QuantityReceived` | integer |
+| `POUnitCost` | `POUnitCost` | double |
+| `POLineCost` | `POLineCost` | double |
+
+### Promotion
+
+Table `sales.promotion` · key **`PromotionID`** · display name **`PromotionName`** · 8 instances in the committed snapshot
+
+| Source column | Property name | Type |
+|---|---|---|
+| `PromotionID` | `PromotionID` | string |
+| `PromotionName` | `PromotionName` | string |
+| `PromotionType` | `PromotionType` | string |
+| `PromotionStartDate` | `PromotionStartDate` | datetime |
+| `PromotionEndDate` | `PromotionEndDate` | datetime |
+| `DiscountDepth` | `DiscountDepth` | string |
+
+### SalesTarget
+
+Table `sales.sales_target` · key **`TargetID`** · display name **`TargetID`** · 456 instances in the committed snapshot
+
+| Source column | Property name | Type |
+|---|---|---|
+| `TargetID` | `TargetID` | string |
+| `StoreID` | **`TargetStoreID`** (rename) | string |
+| `TargetMonth` | `TargetMonth` | datetime |
+| `TargetNetSales` | `TargetNetSales` | double |
 <!-- /generated:entities -->
 
-**Checkpoint:** the Explorer lists 10 entity types, each with a key, a display name property and every
+**Checkpoint:** the Explorer lists 15 entity types, each with a key, a display name property and every
 property bound.
 
 ## Step 3: relationships
@@ -269,8 +344,17 @@ canvas and fill in the middle panel:
 | 9 | `returnOfStyle` | SalesReturn → ProductStyle | `sales.sales_return` | `ReturnID` | `ProductID` | 6,749 |
 | 10 | `returnHasReason` | SalesReturn → ReturnReason | `sales.sales_return` | `ReturnID` | `ReturnReasonID` | 6,749 |
 | 11 | `returnTakenAtStore` | SalesReturn → Store | `sales.sales_return` | `ReturnID` | `ReturnStoreID` | 6,749 |
-| 12 | `stockAtStore` | StoreInventory → Store | `store.store_inventory` | `InventoryID` | `StoreID` | 7,025 |
-| 13 | `stockOfVariant` | StoreInventory → ProductVariant | `store.store_inventory` | `InventoryID` | `VariantID` | 7,025 |
+| 12 | `stockAtStore` | StoreInventory → Store | `store.store_inventory` | `InventoryID` | `StoreID` | 11,773 |
+| 13 | `stockOfVariant` | StoreInventory → ProductVariant | `store.store_inventory` | `InventoryID` | `VariantID` | 11,773 |
+| 14 | `balanceAtStore` | InventoryBalance → Store | `store.inventory_balance` | `BalanceID` | `StoreID` | 235,460 |
+| 15 | `balanceOfVariant` | InventoryBalance → ProductVariant | `store.inventory_balance` | `BalanceID` | `VariantID` | 235,460 |
+| 16 | `poFromSupplier` | PurchaseOrder → Supplier | `supply.purchase_order` | `PurchaseOrderID` | `SupplierID` | 6,108 |
+| 17 | `poForStore` | PurchaseOrder → Store | `supply.purchase_order` | `PurchaseOrderID` | `StoreID` | 6,108 |
+| 18 | `poLineOnOrder` | PurchaseOrderLine → PurchaseOrder | `supply.purchase_order_line` | `PurchaseOrderLineID` | `PurchaseOrderID` | 81,170 |
+| 19 | `poLineForVariant` | PurchaseOrderLine → ProductVariant | `supply.purchase_order_line` | `PurchaseOrderLineID` | `VariantID` | 81,170 |
+| 20 | `poLineOfStyle` | PurchaseOrderLine → ProductStyle | `supply.purchase_order_line` | `PurchaseOrderLineID` | `ProductID` | 81,170 |
+| 21 | `lineOnPromotion` | SalesOrderLine → Promotion | `OrderLinePromotion.csv` | `OrderLineID` | `PromotionID` | 16,501 |
+| 22 | `targetForStore` | SalesTarget → Store | `sales.sales_target` | `TargetID` | `StoreID` | 456 |
 <!-- /generated:relationships -->
 
 Every name is unique. Microsoft lists duplicate relationship names as a known issue that breaks
@@ -284,7 +368,7 @@ that sold it) and directly (the store that took it back).
 
 If a **Matched** dropdown offers no keys, the entity type at that end has no key yet. Go back to step 2.
 
-**Checkpoint:** the canvas shows 13 relationships, each with a mapping table and both matched columns.
+**Checkpoint:** the canvas shows 22 relationships, each with a mapping table and both matched columns.
 
 ## Step 4: refresh and verify the graph
 
