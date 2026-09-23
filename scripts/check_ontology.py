@@ -442,43 +442,26 @@ for rel, origin, target, csv_name, ocol, tcol in RELATIONSHIPS:
 if len({r[0] for r in RELATIONSHIPS}) != len(RELATIONSHIPS):
     errors.append("duplicate relationship names")
 
-# --- Semantic enrichment: check every object has metadata, and build its markdown -----------------
-meta_md = []
+# --- Semantic enrichment: every entity type, property and relationship must have metadata ----------
+def prop_extra(col):
+    if col in MONEY_COLUMNS:
+        return {"unit": "USD"}
+    if col == "QualityRating":
+        return {"unit": "1-5 rating"}
+    if col in SENSITIVE_COLUMNS:
+        return {"sensitivity": "none - synthetic data"}
+    return {}
+
+
 for name, table, csv_name, key, display, renames in ENTITIES:
     if name not in ENTITY_META:
         errors.append(f"{name}: no entry in ENTITY_META")
-        continue
-    description, synonyms, extra = ENTITY_META[name]
-    meta_md.append(f"### {name}\n")
-    meta_md.append(f"**Description:** {description}\n")
-    if synonyms:
-        meta_md.append(f"**Synonyms:** {', '.join(synonyms)}\n")
-    if extra:
-        meta_md.append("**Additional metadata:** " + "; ".join(f"`{k}` = `{v}`" for k, v in extra.items()) + "\n")
-    meta_md.append("| Property | Description | Additional metadata |")
-    meta_md.append("|---|---|---|")
     for col in headers[csv_name]:
-        prop = renames.get(col, col)
         if (name, col) not in PROP_META:
-            errors.append(f"{name}.{prop}: no entry in PROP_META")
-            continue
-        prop_extra = {}
-        if col in MONEY_COLUMNS:
-            prop_extra["unit"] = "USD"
-        elif col == "QualityRating":
-            prop_extra["unit"] = "1-5 rating"
-        elif col in SENSITIVE_COLUMNS:
-            prop_extra["sensitivity"] = "none - synthetic data"
-        extra_cell = "; ".join(f"`{k}`=`{v}`" for k, v in prop_extra.items())
-        meta_md.append(f"| `{prop}` | {PROP_META[(name, col)]} | {extra_cell} |")
-    meta_md.append("")
-
-rel_meta_md = ["| Relationship type | Description |", "|---|---|"]
-for rel, origin, target, csv_name, ocol, tcol in RELATIONSHIPS:
+            errors.append(f"{name}.{renames.get(col, col)}: no entry in PROP_META")
+for rel, *_ in RELATIONSHIPS:
     if rel not in REL_META:
         errors.append(f"{rel}: no entry in REL_META")
-        continue
-    rel_meta_md.append(f"| `{rel}` | {REL_META[rel]} |")
 
 print(f"{len(ENTITIES)} entity types, {len(seen)} properties, {len(RELATIONSHIPS)} relationships")
 print("renames:", sum(len(e[5]) for e in ENTITIES))
@@ -487,25 +470,57 @@ for e in errors:
     print("  ", e)
 
 TABLE_OF = {csv: table for _, table, csv, *_ in ENTITIES} | {"OrderLinePromotion.csv": "sales.order_line_promotion"}
-out = []
+def display_cell(key_prop, display_prop):
+    return f"`{display_prop}`" + (" (no name column, so the key)" if display_prop == key_prop else "")
+
+
+def cell(text):
+    return text.replace("<", "&lt;").replace(">", "&gt;").replace("|", "\\|")
+
+
+def meta_cell(extra):
+    return "; ".join(f"`{k}` = `{v}`" for k, v in extra.items())
+
+
+prop_md = []
+out = ["| # | Entity type | Table | Entity type key | Display name property |", "|---:|---|---|---|---|"]
+for i, (name, table, key_prop, display_prop, props, count) in enumerate(md, 1):
+    out.append(f"| {i} | {name} | `{table}` | `{key_prop}` | {display_cell(key_prop, display_prop)} |")
+out.append("")
 for name, table, key_prop, display_prop, props, count in md:
+    description, synonyms, extra = ENTITY_META.get(name, ("", [], {}))
     out.append(f"### {name}\n")
-    out.append(f"Table `{table}` · key **`{key_prop}`** · display name **`{display_prop}`** · "
-               f"{count:,} instances in the committed snapshot\n")
+    out.append("| Setting | Value |")
+    out.append("|---|---|")
+    out.append(f"| Table | `{table}` |")
+    out.append(f"| Entity type key | `{key_prop}` |")
+    out.append(f"| Display name property | {display_cell(key_prop, display_prop)} |")
+    out.append(f"| Description | {cell(description)} |")
+    out.append(f"| Synonyms | {', '.join(synonyms) or 'None'} |")
+    out.append(f"| Additional metadata | {meta_cell(extra) or 'None'} |")
+    out.append(f"| Instances (committed snapshot) | {count:,} |")
+    out.append("")
     out.append("| Source column | Property name | Type |")
     out.append("|---|---|---|")
     for col, prop, ptype in props:
         shown = f"**`{prop}`** (rename)" if prop != col else f"`{prop}`"
         out.append(f"| `{col}` | {shown} | {ptype} |")
     out.append("")
-rel_md = ["| # | Relationship type | Origin → Target | Mapping table | Matched origin column | Matched target column | Edges in snapshot |",
-          "|---:|---|---|---|---|---|---:|"]
+    prop_md.append(f"### {name} properties\n")
+    prop_md.append("| Property | Description | Additional metadata |")
+    prop_md.append("|---|---|---|")
+    for col, prop, ptype in props:
+        prop_md.append(f"| `{prop}` | {cell(PROP_META.get((name, col), ''))} | {meta_cell(prop_extra(col))} |")
+    prop_md.append("")
+rel_md = ["| # | Relationship type | Origin → Target | Mapping table | Matched origin column | Matched target column "
+          "| Description | Edges in snapshot |",
+          "|---:|---|---|---|---|---|---|---:|"]
 for i, (rel, origin, target, csv_name, ocol, tcol, n) in enumerate(edges, 1):
     rel_md.append(f"| {i} | `{rel}` | {origin} → {target} | `{TABLE_OF.get(csv_name, csv_name)}` | "
-                  f"`{ocol}` | `{tcol}` | {n:,} |")
+                  f"`{ocol}` | `{tcol}` | {cell(REL_META.get(rel, ''))} | {n:,} |")
 
 blocks = {"entities": "\n".join(out).strip(), "relationships": "\n".join(rel_md),
-          "entity-metadata": "\n".join(meta_md).strip(), "relationship-metadata": "\n".join(rel_meta_md)}
+          "property-metadata": "\n".join(prop_md).strip()}
 text = doc.read_text(encoding="utf-8")
 new = text
 for tag, body in blocks.items():
