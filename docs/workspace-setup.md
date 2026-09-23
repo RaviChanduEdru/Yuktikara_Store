@@ -4,17 +4,27 @@ How the Fabric workspace is organised before anything is built in it: its settin
 lakehouse layout and task flow. Do this once, at the start of Episode 1. Every later episode adds items into
 the structure set up here.
 
-Each convention comes from one of three Microsoft sources, checked on 2026-09-22 and linked at the end:
+## Before you start
 
-- **Microsoft Learn**, mainly the workspace-level planning guide. For organising content inside a workspace
-  it recommends clear names, task flows, folders, and endorsement and sensitivity labels. It also covers the
-  workspace's description, contacts and image.
-- **[microsoft/microsoft-iq-solution-accelerator](https://github.com/microsoft/microsoft-iq-solution-accelerator)**,
-  Microsoft's retail ontology and data agent solution. It is the closest match to this project. Its installer
-  sorts items into folders by type, and its lakehouse groups tables into schemas by business area.
-- **[microsoft/fabric-architecture-review](https://github.com/microsoft/fabric-architecture-review)**,
-  Microsoft's tenant review accelerator. Its `config/review-checklist.yaml` is a list of numbered
-  best-practice rules. This page cites the rule IDs it follows and names the ones it deliberately doesn't.
+Two things to confirm before you create anything, because both are awkward to fix once you've built on
+top of them.
+
+**The capacity's region supports Graph.** The ontology's graph model only runs in
+[certain regions](https://learn.microsoft.com/en-us/fabric/graph/overview#region-availability) (checked
+2026-09-23) — Central India is one of roughly 35, alongside East US, West Europe and UK South. **Admin
+portal → Capacity settings →** your capacity, and check its region against that list. Everything for this
+series — workspace, lakehouse, ontology and, later, the data agents — has to sit on this one capacity, so
+settle this now rather than after Step 4.
+
+**Install the Microsoft Fabric Capacity Metrics app**, so it's recording usage from your first item, not
+from whenever you remember to add it. You need to be a capacity admin.
+[AppSource → Microsoft Fabric Capacity Metrics](https://go.microsoft.com/fwlink/?linkid=2219875) → **Get it
+now** → sign in → **Install**. On first run it asks for your UTC offset (`5.5` for India) and a capacity to
+report on.
+
+The tenant settings that let you create an ontology at all — **Ontology item (preview)** and Graph — are
+checked separately, right before you need them, in
+[ontology-bindings.md](ontology-bindings.md#before-you-start).
 
 ## 1. The workspace
 
@@ -23,18 +33,17 @@ Each convention comes from one of three Microsoft sources, checked on 2026-09-22
 | Setting | Value | Why |
 |---|---|---|
 | **Name** | `Yuktikara Retail - Demo` | See the naming note below |
-| **Description** | The text below | Rule ARCH-006: every workspace documents its purpose and ownership |
-| **License mode** | Fabric capacity, on the F2 | Rule ARCH-002. Data agents need a paid F-SKU, and rule COST-006 warns against trial capacities for real work |
+| **Description** | The text below | A workspace should say what it is for and who owns it |
+| **License mode** | Fabric capacity, on the F2 | Data agents need a paid F-SKU, and a trial capacity expires along with everything in it |
 | **Workspace image** | [`docs/assets/workspace-image.png`](assets/workspace-image.png) | Learn: a consistent image helps people spot the workspace in a list |
 | **Contacts** | Leave the default (the workspace admins) | Learn: change it only when someone else answers questions |
 | **Domain** (optional) | A `Retail` domain, if you're a Fabric admin | Learn: domains group workspaces by business area and make ownership clear |
 
-**Why the name ends in "- Demo".** It marks the environment. Microsoft's review accelerator reads
-environment markers from workspace names. A marker counts only if a space, hyphen, underscore or full stop
-separates it from the rest of the name. `demo`, `dev`, `test` and `sandbox` count as non-production; `prod`
-and `live` count as production. Learn's examples put the stage in brackets, as in `[Dev]`, but the
-accelerator doesn't recognise a marker inside brackets. `- Demo` works for both. Naming the stage is rule
-GOV-004, and the marker exempts the workspace from the production-only rules listed in section 7.
+**Why the name ends in "- Demo".** It marks the environment, which is what tells anyone reading a list of
+workspaces, or any tool that sorts them, that this one isn't production. Use a separator rather than
+brackets: tooling that classifies workspaces by name typically looks for `dev`, `test`, `demo` or `sandbox`
+with a space, hyphen, underscore or full stop on either side, so `[Demo]` in brackets is easily missed, while
+`- Demo` is read either way.
 
 **Description** (the field takes up to 4,000 characters; Learn suggests covering purpose, audience, content,
 governance, environment and contact):
@@ -54,10 +63,9 @@ Questions: open an issue at github.com/RaviChanduEdru/Yuktikara_Store
 
 ## 2. Folders
 
-Folders group items by **type**, using the folder names from Microsoft's IQ accelerator, so anyone who has
-deployed it will recognise the layout. The task flow in section 5 groups the same items by **purpose**.
-Learn presents folders and task flows as alternatives that can also be combined; here each answers a
-different question.
+Folders group items by **type**; the task flow in section 5 groups the same items by **purpose**. Learn
+presents folders and task flows as alternatives that can also be combined, and here each answers a different
+question: what is this, and what is it for.
 
 | Folder | Holds | Episode |
 |---|---|---|
@@ -95,7 +103,7 @@ Items with restricted names use underscores; items people read in Power BI or ch
 | Item | Name | Rule it follows |
 |---|---|---|
 | Workspace | `Yuktikara Retail - Demo` | Section 1 |
-| Lakehouse | `yuktikara_lh` | Letters, numbers and underscores only. The `_lh` suffix follows the review accelerator's `fabric_arch_review_lh` |
+| Lakehouse | `yuktikara_lh` | Letters, numbers and underscores only; the `_lh` suffix says what the item is |
 | Notebook | `load_yuktikara_data` | Same as the file in [`fabric/`](../fabric/load_yuktikara_data.ipynb), so the repo and the workspace match |
 | Semantic model | `Yuktikara Sales` | Business users see this name in Power BI |
 | Ontology | `Yuktikara_Ontology` | Letters, numbers and underscores only; no spaces or dashes |
@@ -114,9 +122,8 @@ lakehouse with OneLake security.
 Files/yuktikara/data/                 the repo's data folder: 17 CSVs, manifest.json, expected_answers.json
 ```
 
-**Tables** go into six schemas by business area, the same layout as the IQ accelerator's lakehouse
-(`sales`, `product`, `customer`, `shared` and others). The load notebook creates the schemas if they're
-missing. You can also create them by hand first: **Tables → … → New schema**.
+**Tables** go into six schemas, one per business area. The load notebook creates them if they're missing.
+You can also create them by hand first: **Tables → … → New schema**.
 
 | Schema | Tables |
 |---|---|
@@ -133,7 +140,7 @@ the Episode 2 lakehouse agent see `sales.sales_order` rather than a flat list of
 
 **Medallion layers, and why there's one lakehouse.** Microsoft Learn calls the medallion architecture the
 recommended design for Fabric. It recommends one lakehouse per layer, ideally each in its own workspace.
-Yuktikara follows the IQ accelerator instead and uses one lakehouse, with the layers inside it:
+Yuktikara uses one lakehouse instead, with the layers inside it:
 
 - **Bronze:** raw files, kept per run.
 - **Silver:** typed, verified tables.
@@ -161,7 +168,9 @@ Building it (Microsoft Learn, *Set up a task flow* and *Work with task flows*):
    issue moves any *unconnected* task back to its default position when you add a new task.
 5. Assign items: select the task's clip icon, then **Assign item**, tick the items, then **Select**. An
    item belongs to one task at most. Create items inside their folder first, then assign them, so each
-   item has both a folder and a task.
+   item has both a folder and a task. **Do this the moment each item exists**, not as a batch at the end —
+   assign the lakehouse right after you create it, the notebook right after you import it, and so on. The
+   item list then stays organised through the whole build instead of needing a tidy-up pass afterward.
 6. Select a blank area of the canvas, then **Edit**, and name the flow `Yuktikara Store platform`, with
    the description *One retailer's data platform, built by hand one episode at a time. Select a task to
    see its items.*
@@ -204,41 +213,42 @@ connectors but not the item assignments, so anyone can import the same flow and 
 ## 6. Endorsement and labels
 
 - **Promote the semantic model** (**Settings → Endorsement → Promoted**) once its Net Sales measure matches
-  the run's `expected_answers.json`. Promotion marks it as the trusted figure, which is its job in the
-  series. This follows rules GOV-008 and GOV-009.
-- **Sensitivity labels** (rule GOV-003) need Microsoft Purview Information Protection in the tenant. Skip
-  them if the tenant has none: all the data is synthetic.
+  the run's `expected_answers.json`. Promotion marks it as the trusted figure, which is its job in the series.
+- **Sensitivity labels** need Microsoft Purview Information Protection in the tenant. Skip them if the tenant
+  has none: all the data is synthetic.
 
-## 7. Rules from Microsoft's review accelerator
+## 7. What this setup follows, and what it skips
 
-Rules this setup follows:
+Followed:
 
-| Rule | What it asks | How Yuktikara meets it |
-|---|---|---|
-| ARCH-002 | Every workspace on a Fabric capacity | On the F2 |
-| ARCH-006 | Every workspace has a description | Section 1 |
-| GOV-004 | Workspace names follow a convention with an environment marker | `Yuktikara Retail - Demo` |
-| GOV-007 | The Capacity Metrics app is installed | Install it; it's the only ongoing view of what the graph and Spark cost on an F2 |
-| GOV-008, GOV-009 | Trusted content is endorsed | The semantic model is promoted |
-| COST-002, COST-003 | Non-production capacities are paused when idle | Pause the F2 after every session |
-| NBCODE-001 | No secrets in notebooks | The load notebook holds none |
-| NBCODE-002 | No inline `%pip install` | The notebook and scripts use only the Python standard library and Spark |
-| NBCODE-005 | No hard-coded `abfss://` paths or GUIDs | Paths are relative to the default lakehouse |
-| NBCODE-006 | Write Delta, not Parquet or CSV | Every table is written as Delta |
+| Practice | How Yuktikara meets it |
+|---|---|
+| Every workspace sits on a Fabric capacity | On the F2 |
+| Every workspace has a description | Section 1 |
+| Names follow a convention, with the environment in them | `Yuktikara Retail - Demo` |
+| Capacity use is visible | The Capacity Metrics app, installed in *Before you start*: it's the only ongoing view of what the graph and Spark cost on an F2 |
+| Trusted content is endorsed | The semantic model is promoted |
+| Non-production capacity is paused when idle | Pause the F2 after every session |
+| No secrets in notebooks | The load notebook holds none |
+| No inline `%pip install` | The notebook and scripts use only the Python standard library and Spark |
+| No hard-coded `abfss://` paths or GUIDs | Paths are relative to the default lakehouse |
+| Write Delta, not Parquet or CSV | Every table is written as Delta |
 
-Rules left out on purpose, and why:
+Skipped on purpose:
 
-| Rule | What it asks | Why not here |
-|---|---|---|
-| ARCH-001 | Separate workspaces per medallion layer | One author, one synthetic source; see section 4 |
-| ARCH-004, OPS-002 | Git integration for production workspaces | Production-only, and syncing would commit item definitions that carry the workspace's and lakehouse's IDs into a public repo. The IQ accelerator handles that with `parameter.yml` placeholders and deployment scripts, which this hand-built series avoids. For version history, connect a separate **private** repo |
-| ARCH-009, OPS-001, OPS-003 | Deployment pipelines from dev to test to prod | Production-only. A second stage would need a second ontology, and each graph uses capacity while it runs, which an F2 can't spare |
-| GOV-001 | At least two workspace admins | Production-only; this is a one-person demo |
+| Practice | Why not here |
+|---|---|
+| A workspace per medallion layer | One author, one synthetic source; see section 4 |
+| Git integration | Item definitions carry the workspace's and lakehouse's IDs, and this repo is public. For version history, connect a separate **private** repo |
+| Deployment pipelines, from dev to test to prod | A second stage would need a second ontology, and each graph uses capacity while it runs, which an F2 can't spare |
+| At least two workspace admins | This is a one-person demo, not production |
 
 ## Sources
 
-Microsoft Learn, checked 2026-09-22:
+Microsoft Learn, checked 2026-09-22 unless noted:
 
+- [Graph overview](https://learn.microsoft.com/fabric/graph/overview#region-availability): region availability and pricing (checked 2026-09-23)
+- [Install the Capacity Metrics app](https://learn.microsoft.com/fabric/enterprise/metrics-app-install) (checked 2026-09-23)
 - [Workspace-level planning](https://learn.microsoft.com/power-bi/guidance/powerbi-implementation-planning-workspaces-workspace-level-planning): intra-workspace organisation, description, contacts, image, domains
 - [Create folders in workspaces](https://learn.microsoft.com/fabric/fundamentals/workspaces-folders)
 - [Task flows overview](https://learn.microsoft.com/fabric/fundamentals/task-flow-overview), [Set up a task flow](https://learn.microsoft.com/fabric/fundamentals/task-flow-create), [Work with task flows](https://learn.microsoft.com/fabric/fundamentals/task-flow-work-with)
@@ -246,11 +256,3 @@ Microsoft Learn, checked 2026-09-22:
 - [Lakehouse schemas](https://learn.microsoft.com/fabric/data-engineering/lakehouse-schemas)
 - [Medallion lakehouse architecture](https://learn.microsoft.com/fabric/onelake/onelake-medallion-lakehouse-architecture)
 - [Bind data to an ontology](https://learn.microsoft.com/fabric/iq/ontology/how-to-bind-data): OneLake security and column mapping limits
-
-Microsoft repos:
-
-- microsoft-iq-solution-accelerator: `docs/fabric/DeploymentGuideFabricManual.md` (the folder layout),
-  `.github/instructions/fabric-workspace.instructions.md` (item conventions), and the ontology's data
-  bindings, which read tables such as `supplychain.suppliers`
-- fabric-architecture-review: `config/review-checklist.yaml` (the rules), `analyzers/applicability.py`
-  (environment markers in workspace names), `fabric/README.md` (the workspace logo)
