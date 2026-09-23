@@ -284,8 +284,8 @@ SalesReturn ── returns ────────────────┼�
 StoreInventory ── counts a ProductVariant ── in a Store
 ```
 
-Column by column: [data-model.md](data-model.md). The same business as an ontology, with every entity type,
-property and relationship: [ontology-bindings.md](ontology-bindings.md).
+Column by column: [data-model.md](ep1/02-data-model.md). The same business as an ontology, with every entity type,
+property and relationship: [ontology-bindings.md](ep1/03-ontology-bindings.md).
 
 ## What's simplified
 

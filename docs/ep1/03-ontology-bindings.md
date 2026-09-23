@@ -16,7 +16,7 @@ Ontology is a preview feature. The UI labels below come from the Microsoft Learn
 | Check | How |
 |---|---|
 | Tenant setting **Ontology item (preview)** is on | Workspace → **+ New item** lists **Ontology (preview)** |
-| Workspace is on a Fabric capacity (F2 or above) | Workspace settings → License info |
+| Workspace is on a Fabric capacity | Workspace settings → License info. A 60-day trial capacity is enough for everything on this page; only Episode 2's data agents need a paid F2 or higher |
 | Lakehouse `yuktikara_lh` created with **Lakehouse schemas**, OneLake security **off** | Tables show the schemas `customer`, `product`, `sales`, `shared`, `store`, `supply` (plus the empty default `dbo`) |
 | The 17 tables are loaded | The load notebook's *Verify* cell ends in `PASS` |
 
@@ -43,9 +43,9 @@ date table exists for the semantic model and the lakehouse-only comparison agent
 
 ## Step 1: create the ontology item
 
-Open the workspace folder **`ontology`**, then **+ New item** → search **Ontology (preview)** → **Name**
-`Yuktikara_Ontology` → **Create**. Creating it from inside the folder puts it there; see
-[workspace-setup.md](workspace-setup.md) for the folder layout and the task it belongs to.
+From the task flow's **Ontology** task: **+ New item** → **Ontology (preview)**. In the **New Ontology**
+dialog, **Name** `Yuktikara_Ontology`, **Location** the `ontology` folder, **Assign to task** `Ontology` →
+**Create**. See [workspace-setup.md](01-workspace-setup.md) for the folder layout.
 
 Ontology names take letters, numbers and underscores only; no spaces or dashes. Fabric also creates a
 **graph model** child item in the workspace. Leave it alone until step 4.
@@ -353,7 +353,7 @@ canvas and fill in the middle panel:
 | 18 | `poLineOnOrder` | PurchaseOrderLine → PurchaseOrder | `supply.purchase_order_line` | `PurchaseOrderLineID` | `PurchaseOrderID` | 81,170 |
 | 19 | `poLineForVariant` | PurchaseOrderLine → ProductVariant | `supply.purchase_order_line` | `PurchaseOrderLineID` | `VariantID` | 81,170 |
 | 20 | `poLineOfStyle` | PurchaseOrderLine → ProductStyle | `supply.purchase_order_line` | `PurchaseOrderLineID` | `ProductID` | 81,170 |
-| 21 | `lineOnPromotion` | SalesOrderLine → Promotion | `OrderLinePromotion.csv` | `OrderLineID` | `PromotionID` | 16,501 |
+| 21 | `lineOnPromotion` | SalesOrderLine → Promotion | `sales.order_line_promotion` | `OrderLineID` | `PromotionID` | 16,501 |
 | 22 | `targetForStore` | SalesTarget → Store | `sales.sales_target` | `TargetID` | `StoreID` | 456 |
 <!-- /generated:relationships -->
 
@@ -375,7 +375,7 @@ If a **Matched** dropdown offers no keys, the entity type at that end has no key
 Changing the schema re-ingests bound data automatically. Changing the **rows** doesn't, so refresh after
 every notebook run: workspace → the ontology's graph model → **…** → **Schedule** → **Refresh now**. Each
 refresh rebuilds the whole graph and uses capacity, so batch your changes and don't set a recurring
-schedule on F2.
+schedule, whether you're on the trial or a paid capacity.
 
 Then select an entity type → **View entity type details** → **Instances**:
 

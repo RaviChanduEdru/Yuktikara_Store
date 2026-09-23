@@ -37,20 +37,19 @@ python scripts/generate_yuktikara.py --end yesterday   # dates that end yesterda
 python scripts/oracle_yuktikara.py                     # recompute the answer key
 ```
 
-1. Set up the workspace, its folders and its task flow: [docs/workspace-setup.md](docs/workspace-setup.md),
+1. Set up the workspace and its folders: [docs/ep1/01-workspace-setup.md](docs/ep1/01-workspace-setup.md),
    whose *Before you start* section covers your capacity's region and the Capacity Metrics app.
 2. Create the lakehouse `yuktikara_lh` with **Lakehouse schemas** checked, and leave OneLake security off.
-3. Upload `data/` to `Files/yuktikara/data/`: the 17 CSVs, `manifest.json` and `expected_answers.json`. Use
+3. Upload `data/` to `Files/yuktikara/data/`: the 17 CSVs, `manifest.json` and `expected_answers.json`. (Just
+   the data and the notebook, without cloning: the [ep1-data release](https://github.com/RaviChanduEdru/Yuktikara_Store/releases/tag/ep1-data).) Use
    the committed snapshot as it is for your first build, so every number you see in Fabric matches this
    README and the guides; regenerate only once you're ready to record (see below).
 4. Import [`fabric/load_yuktikara_data.ipynb`](fabric/load_yuktikara_data.ipynb), attach the lakehouse as its
    default, and **Run all**. It writes every table with explicit column types, then verifies row counts,
    types and that no table has column mapping. Fabric runs no other code in this build.
-5. Build a semantic model over `sales_order`, `sales_return` and `dim_date`: relationships to `dim_date` on
-   `OrderDate` and on `ReturnDate`, and a `Net Sales` measure. Check it against the notebook's answer key
-   before you trust it — a table visual by quarter should match `expected_answers.json` to the cent — then
-   promote the model.
-6. Build the ontology by hand: [docs/ontology-bindings.md](docs/ontology-bindings.md).
+5. Build the ontology by hand: [docs/ep1/03-ontology-bindings.md](docs/ep1/03-ontology-bindings.md).
+
+Build the task flow too, alongside these steps rather than after them: [docs/architecture.md#task-flow](docs/architecture.md#task-flow).
 
 Regenerate before you build, because a fixed snapshot goes stale: "last quarter" drifts away from the data as
 the calendar moves. The generator rebuilds the window rather than shifting old dates forward, which keeps the
@@ -96,7 +95,7 @@ In the lakehouse they sit in six schemas, one per business area:
 | `customer` | `customer` |
 | `shared` | `dim_date` |
 
-Column by column: [docs/data-model.md](docs/data-model.md).
+Column by column: [docs/ep1/02-data-model.md](docs/ep1/02-data-model.md).
 
 ## Definitions, the thing a foundation writes down
 
@@ -165,7 +164,7 @@ Each episode adds to the same workspace; nothing built earlier is thrown away.
 
 | Episode | What it builds | Status |
 |---|---|---|
-| 1 | Workspace, lakehouse, semantic model, ontology and graph | Data and guides ready |
+| 1 | Workspace, lakehouse, ontology and graph | Data and guides ready |
 | 2 | Two data agents, one on the tables and one on the ontology, put to six scenarios | Planned |
 | 3 | RFID floor readings streamed through an eventstream into an eventhouse | Planned |
 | 4 | An operations agent watching for shelves below their minimum | Planned |

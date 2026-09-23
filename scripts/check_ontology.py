@@ -1,4 +1,4 @@
-"""Validate the ontology design against the data and keep docs/ontology-bindings.md in sync.
+"""Validate the ontology design against the data and keep docs/ep1/03-ontology-bindings.md in sync.
 
 Usage: python scripts/check_ontology.py [--write]
 """
@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 data = ROOT / "data"
-doc = ROOT / "docs" / "ontology-bindings.md"
+doc = ROOT / "docs" / "ep1" / "03-ontology-bindings.md"
 WRITE = "--write" in sys.argv
 
 # From https://learn.microsoft.com/en-us/fabric/graph/gql-reference-reserved-terms (updated 2026-06-02)
@@ -486,7 +486,7 @@ print("ERRORS:" if errors else "VALID: unique names, <=26 chars, no reserved wor
 for e in errors:
     print("  ", e)
 
-TABLE_OF = {csv: table for _, table, csv, *_ in ENTITIES}
+TABLE_OF = {csv: table for _, table, csv, *_ in ENTITIES} | {"OrderLinePromotion.csv": "sales.order_line_promotion"}
 out = []
 for name, table, key_prop, display_prop, props, count in md:
     out.append(f"### {name}\n")

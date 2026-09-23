@@ -333,4 +333,4 @@ awkward against raw tables and natural against an ontology.
 
 In the ontology these become 22 named relationship types, and `Product` becomes the entity type
 `ProductStyle` because `PRODUCT` is a GQL reserved word. The full binding, with every property name, is in
-[ontology-bindings.md](ontology-bindings.md).
+[ontology-bindings.md](03-ontology-bindings.md).
