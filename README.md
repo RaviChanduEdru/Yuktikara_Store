@@ -3,8 +3,9 @@
 [![Data checks](https://github.com/RaviChanduEdru/Yuktikara_Store/actions/workflows/data-checks.yml/badge.svg)](https://github.com/RaviChanduEdru/Yuktikara_Store/actions/workflows/data-checks.yml)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-informational)](LICENSE)
 
-A synthetic dataset and build guide for learning **Microsoft Fabric** — ontology, data agents and Real-Time
-Intelligence — by building every piece **by hand in the portal**.
+The data and build guides for **Yuktikara Store: Microsoft Fabric, End to End**, a series that builds a
+retailer's whole data platform in **Microsoft Fabric**: lakehouse, ontology, data agents and Real-Time
+Intelligence, every piece **by hand in the portal**.
 
 Yuktikara Store is a fictional apparel, footwear and outdoor gear retailer: 18 stores across the Pacific
 Northwest, Northern Rockies, Colorado Front Range and Great Basin, plus an online channel. The data covers
@@ -160,7 +161,9 @@ SHA-256 for every file, so you can confirm you're working from the dataset these
 
 ## The series
 
-Each episode adds to the same workspace; nothing built earlier is thrown away.
+**Yuktikara Store: Microsoft Fabric, End to End.** Each episode adds to the same workspace; nothing built
+earlier is thrown away. Episode 1's step-by-step article:
+[Build a retail ontology in Microsoft Fabric, step by step](https://ravichanduedru.me/articles/fabric-iq/build-yuktikara-retail-foundation-fabric-iq).
 
 | Episode | What it builds | Status |
 |---|---|---|
